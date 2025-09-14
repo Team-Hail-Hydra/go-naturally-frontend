@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/landing";
 import RegisterForm from "./pages/register";
-import Dashboard from "./pages/welcome";
+import Welcome from "./pages/welcome";
 import Game from "./pages/game";
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/register" element={<RegisterForm />} />
-        <Route path="/welcome" element={<Dashboard />} />
+        <Route path="/welcome" element={<Welcome />} />
         <Route path="/game" element={<Game />} />
       </Routes>
     </BrowserRouter>

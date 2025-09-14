@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import axios from 'axios'
 import { supabase } from "../utils/supabase"
+import { useNavigate } from 'react-router-dom' // Make sure this is imported
 
 type UserRole = 'STUDENT' | 'TEACHER' | 'NGO';
 type ActionType = 'create' | 'join' | 'individual';
@@ -16,7 +17,8 @@ interface JoinOrganizationData {
   organizationCode: string;
 }
 
-export default function Dashboard() {
+export default function Welcome() {
+  const navigate = useNavigate(); // Add this hook
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [step, setStep] = useState<'role' | 'action' | 'details' | 'complete'>('role')
@@ -34,21 +36,45 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Get current session (after OAuth redirect)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         setUser(session.user)
         setAccessToken(session.access_token)
         console.log("User:", session.user)
         console.log("Access Token:", session.access_token)
 
+        try {
+          // Check if user already belongs to a school or NGO
+          const userdata = await axios.get(`http://localhost:3000/api/v1/user/${session.user.id}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
+          console.log("Fetched user data:", userdata.data);
+
+          // If user has either schoolId or ngoId, redirect to dashboard
+          if (userdata.data.schoolId || userdata.data.ngoId) {
+            console.log("User already has organization, redirecting to dashboard");
+            localStorage.setItem('userData', JSON.stringify(userdata.data));
+            navigate('/dashboard');
+            return;
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+
         // Check if user already has a role set
         if (session.user.user_metadata?.role) {
           setSelectedRole(session.user.user_metadata.role)
           setStep('action')
+          console.log("Existing role found:", session.user.user_metadata.role)
         }
       }
       setLoading(false)
     })
+
+
 
     // Listen for auth changes
     const { data: listener } = supabase.auth.onAuthStateChange(
@@ -130,7 +156,7 @@ export default function Dashboard() {
   const joinOrganization = async () => {
     if (!user || !accessToken) return;
 
-    const orgType = selectedRole === 'TEACHER' ? 'School' : 'NGO';
+    const orgType = selectedRole === 'TEACHER' || selectedRole === 'STUDENT' ? 'School' : 'NGO';
 
     const joinRequestData = {
       user_id: user.id,
@@ -196,6 +222,31 @@ export default function Dashboard() {
 
     setStep('complete');
     setLoading(false);
+  };
+
+  // Handle continue to dashboard - NEW FUNCTION
+  const handleContinueToDashboard = async () => {
+    // console.log('💾 Storing role in sessionStorage:', selectedRole);
+    // console.log('🧭 Navigating to dashboard');
+
+    // // Store role in sessionStorage
+    // sessionStorage.setItem('userRole', selectedRole);
+
+    // // Store additional user info in sessionStorage if needed
+    // sessionStorage.setItem('userName', user?.user_metadata.full_name || user?.email || '');
+    // sessionStorage.setItem('userEmail', user?.email || '');
+    // sessionStorage.setItem('userId', user?.id || '');
+
+    const userdata = await axios.get(`http://localhost:3000/api/v1/user/${user?.id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    console.log("Fetched user data before dashboard navigation:", userdata.data);
+    localStorage.setItem('userData', JSON.stringify(userdata.data));
+    // Navigate to dashboard
+    navigate('/dashboard');
   };
 
   // Go back function
@@ -469,7 +520,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Complete Step */}
+        {/* Complete Step - UPDATED WITH SESSION STORAGE AND NAVIGATION */}
         {step === 'complete' && (
           <div className="text-center space-y-4">
             <div className="text-green-600 text-6xl mb-4">✓</div>
@@ -483,7 +534,7 @@ export default function Dashboard() {
               }
             </p>
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={handleContinueToDashboard}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
             >
               Continue to Dashboard

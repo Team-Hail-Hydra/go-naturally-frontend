@@ -6,6 +6,8 @@ import AvatarCreator from "./AvatarCreator";
 import { AvatarLayer } from "./AvatarLayer";
 import { MarkerManager } from "../utils/MarkerManager";
 import { LightPresetManager } from "../utils/LightPresetManager";
+import EventsDropdown from './EventsDropdown';
+import PlantUpload from './PlantUpload'; // Import the new component
 
 function Map() {
   const isDevelopment = import.meta.env.VITE_MODE === 'development';
@@ -21,6 +23,8 @@ function Map() {
   const markerManagerRef = useRef<MarkerManager | null>(null);
   const lightPresetManagerRef = useRef<LightPresetManager | null>(null);
   const [mapBearing, setMapBearing] = useState(0);
+  const [isEventsDropdownOpen, setIsEventsDropdownOpen] = useState(false);
+
 
   useEffect(() => {
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ?? "";
@@ -312,6 +316,28 @@ function Map() {
 
           <div className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-xs">
             <div>Q/E: Rotate View</div>
+          </div>
+
+          {/* Plant Upload Component */}
+          <PlantUpload userLocation={userLocation} />
+
+          {/* Three dots menu button */}
+          <div className="relative">
+            <button
+              onClick={() => setIsEventsDropdownOpen(!isEventsDropdownOpen)}
+              className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-lg shadow-lg transition-colors"
+              title="Events Menu"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+              </svg>
+            </button>
+
+            {/* Events Dropdown */}
+            <EventsDropdown
+              isOpen={isEventsDropdownOpen}
+              onClose={() => setIsEventsDropdownOpen(false)}
+            />
           </div>
         </div>
       )}
