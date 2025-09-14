@@ -22,7 +22,7 @@ const style = { width: "100%", height: "100%", border: "none" };
 export default function AvatarCreator({
   onAvatarCreated,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onClose,
+  // onClose,
 }: AvatarCreatorProps) {
   const [isCreating, setIsCreating] = useState(false);
 

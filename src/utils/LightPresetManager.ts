@@ -11,7 +11,7 @@ export class LightPresetManager {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private map: any; // Mapbox Map instance
   private currentPreset?: SimpleLightPreset;
-  private updateInterval?: number;
+  private updateInterval?: NodeJS.Timeout;
 
   // Simplified light presets using Mapbox built-in lighting
   private static readonly LIGHT_PRESETS: SimpleLightPreset[] = [

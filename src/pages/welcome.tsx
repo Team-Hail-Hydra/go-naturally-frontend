@@ -78,7 +78,7 @@ export default function Welcome() {
 
     // Listen for auth changes
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         if (session) {
           setUser(session.user)
           setAccessToken(session.access_token)

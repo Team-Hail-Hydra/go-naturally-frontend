@@ -96,7 +96,7 @@ export const authService = {
   // Sign out
   signOut: async (): Promise<void> => {
     const { error } = await supabase.auth.signOut();
-    
+
     if (error) {
       throw new Error(error.message);
     }
@@ -137,7 +137,7 @@ export const authService = {
 
   // Listen to auth state changes
   onAuthStateChange: (callback: (user: User | null) => void) => {
-    return supabase.auth.onAuthStateChange(async (event, session) => {
+    return supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const user: User = {
           id: session.user.id,
