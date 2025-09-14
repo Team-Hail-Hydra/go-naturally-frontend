@@ -18,7 +18,7 @@ const roleConfig = {
   },
   teacher: {
     icon: Users,
-    label: "Teacher", 
+    label: "Teacher",
     description: "Create or join schools and manage classes"
   },
   ngo: {
@@ -28,7 +28,7 @@ const roleConfig = {
   }
 };
 
-export function RegisterForm() {
+export default function RegisterForm() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -43,7 +43,7 @@ export function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       toast({
         variant: "destructive",
@@ -63,7 +63,7 @@ export function RegisterForm() {
     }
 
     setLoading(true);
-    
+
     try {
       const user = await authService.signUp(formData.email, formData.password, formData.name, formData.role);
       toast({
@@ -86,13 +86,13 @@ export function RegisterForm() {
 
   const handleGoogleSignIn = async () => {
     setOauthLoading(true);
-    
+
     try {
       // Store selected role in localStorage before OAuth redirect
       localStorage.setItem('pendingUserRole', formData.role);
-      
+
       await authService.signInWithGoogle(`${window.location.origin}/welcome`);
-      
+
       toast({
         title: "Redirecting...",
         description: "Taking you to Google for authentication."
@@ -100,7 +100,7 @@ export function RegisterForm() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Google sign-in failed';
       toast({
-        variant: "destructive", 
+        variant: "destructive",
         title: "Google sign-in failed",
         description: errorMessage
       });
@@ -225,8 +225,8 @@ export function RegisterForm() {
               </div>
             </div>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-gradient-primary hover:opacity-90 shadow-glow"
               disabled={loading}
             >

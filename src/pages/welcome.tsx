@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react"
-import { createClient } from "@supabase/supabase-js"
 import type { User } from "@supabase/supabase-js"
 import axios from 'axios'
-
-const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY || '';
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from "../utils/supabase"
 
 type UserRole = 'STUDENT' | 'TEACHER' | 'NGO';
 type ActionType = 'create' | 'join' | 'individual';
@@ -44,7 +40,7 @@ export default function Dashboard() {
         setAccessToken(session.access_token)
         console.log("User:", session.user)
         console.log("Access Token:", session.access_token)
-        
+
         // Check if user already has a role set
         if (session.user.user_metadata?.role) {
           setSelectedRole(session.user.user_metadata.role)
@@ -102,7 +98,7 @@ export default function Dashboard() {
   // API call to create organization (school/ngo)
   const createOrganization = async () => {
     if (!user || !accessToken) return;
-    
+
     const orgType = selectedRole === 'TEACHER' ? 'School' : 'NGO';
     const orgData = {
       name: formData.name,
@@ -164,9 +160,9 @@ export default function Dashboard() {
 
   const handleRoleSubmit = async () => {
     setLoading(true);
-    
+
     console.log('📤 Updating user metadata with role:', selectedRole);
-    
+
     // Update user metadata with selected role
     await supabase.auth.updateUser({
       data: { role: selectedRole }
@@ -174,14 +170,14 @@ export default function Dashboard() {
 
     // Create user in backend
     await createUser();
-    
+
     setStep('action');
     setLoading(false);
   };
 
   const handleActionSubmit = () => {
     console.log('📋 Selected action:', selectedAction);
-    
+
     if (selectedAction === 'create' || selectedAction === 'join') {
       setStep('details');
     } else {
@@ -191,13 +187,13 @@ export default function Dashboard() {
 
   const handleDetailsSubmit = async () => {
     setLoading(true);
-    
+
     if (selectedAction === 'create') {
       await createOrganization();
     } else if (selectedAction === 'join') {
       await joinOrganization();
     }
-    
+
     setStep('complete');
     setLoading(false);
   };
@@ -205,7 +201,7 @@ export default function Dashboard() {
   // Go back function
   const goBack = () => {
     console.log('🔙 Going back from step:', step);
-    
+
     if (step === 'action') {
       setStep('role');
     } else if (step === 'details') {
@@ -229,9 +225,9 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
         <div className="text-center mb-6">
-          <img 
-            src={user.user_metadata.avatar_url} 
-            alt="avatar" 
+          <img
+            src={user.user_metadata.avatar_url}
+            alt="avatar"
             className="w-16 h-16 rounded-full mx-auto mb-4"
           />
           <h1 className="text-2xl font-bold">
@@ -287,7 +283,7 @@ export default function Dashboard() {
             <h2 className="text-xl font-semibold text-center">
               What would you like to do?
             </h2>
-            
+
             <div className="space-y-3">
               {selectedRole === 'STUDENT' && (
                 <>
@@ -386,7 +382,7 @@ export default function Dashboard() {
             <h2 className="text-xl font-semibold text-center">
               {selectedRole === 'TEACHER' ? 'Create School' : 'Create NGO'}
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">
@@ -401,7 +397,7 @@ export default function Dashboard() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">Email</label>
                 <input
@@ -413,7 +409,7 @@ export default function Dashboard() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">Phone Number</label>
                 <input
@@ -443,7 +439,7 @@ export default function Dashboard() {
             <h2 className="text-xl font-semibold text-center">
               Join {selectedRole === 'STUDENT' || selectedRole === 'TEACHER' ? 'School' : 'NGO'}
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">
@@ -479,11 +475,11 @@ export default function Dashboard() {
             <div className="text-green-600 text-6xl mb-4">✓</div>
             <h2 className="text-xl font-semibold">Setup Complete!</h2>
             <p className="text-gray-600">
-              {selectedAction === 'create' 
+              {selectedAction === 'create'
                 ? `Your ${selectedRole === 'TEACHER' ? 'school' : 'NGO'} has been created successfully.`
                 : selectedAction === 'join'
-                ? `Successfully joined organization!`
-                : 'You can now continue as an individual student.'
+                  ? `Successfully joined organization!`
+                  : 'You can now continue as an individual student.'
               }
             </p>
             <button
