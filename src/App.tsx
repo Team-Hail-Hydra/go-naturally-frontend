@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Map from "./components/Map";
 import { RegisterForm } from "./pages/register";
-import Dashboard from "./pages/welcome";
+import Welcome from "./pages/welcome";
 
 function App() {
   return (
@@ -9,7 +9,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Map />} />
         <Route path="/register" element={<RegisterForm />} />
-        <Route path="/welcome" element={<Dashboard />} />
+        <Route path="/welcome" element={<Welcome />} />
       </Routes>
     </BrowserRouter>
   );

@@ -4,6 +4,8 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import type { RasterDEMSourceSpecification } from "mapbox-gl";
 import AvatarCreator from "./AvatarCreator";
 import { AvatarLayer } from "./AvatarLayer";
+import EventsDropdown from './EventsDropdown';
+import PlantUpload from './PlantUpload'; // Import the new component
 
 function Map() {
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -15,6 +17,7 @@ function Map() {
     null
   );
   const avatarLayerRef = useRef<AvatarLayer | null>(null);
+  const [isEventsDropdownOpen, setIsEventsDropdownOpen] = useState(false);
 
   useEffect(() => {
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ?? "";
@@ -163,14 +166,37 @@ function Map() {
         </div>
       )}
 
-      {/* Location status */}
-      {!userLocation && (
-        <div className="absolute top-4 right-4 z-10">
+      {/* Plant Upload Component */}
+      <PlantUpload userLocation={userLocation} />
+
+      {/* Top right controls */}
+      <div className="absolute top-4 right-4 z-10 flex items-start gap-2">
+        {/* Location status */}
+        {!userLocation && (
           <div className="bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm">
             Getting location...
           </div>
+        )}
+        
+        {/* Three dots menu button */}
+        <div className="relative">
+          <button
+            onClick={() => setIsEventsDropdownOpen(!isEventsDropdownOpen)}
+            className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-lg shadow-lg transition-colors"
+            title="Events Menu"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
+          </button>
+
+          {/* Events Dropdown */}
+          <EventsDropdown 
+            isOpen={isEventsDropdownOpen}
+            onClose={() => setIsEventsDropdownOpen(false)}
+          />
         </div>
-      )}
+      </div>
 
       {/* Avatar Creator Modal */}
       {showAvatarCreator && (
