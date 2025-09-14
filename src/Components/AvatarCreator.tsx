@@ -21,6 +21,7 @@ const style = { width: "100%", height: "100%", border: "none" };
 
 export default function AvatarCreator({
   onAvatarCreated,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onClose,
 }: AvatarCreatorProps) {
   const [isCreating, setIsCreating] = useState(false);
@@ -35,12 +36,12 @@ export default function AvatarCreator({
     <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
       <div className="bg-white rounded-lg w-full h-full max-w-4xl max-h-[90vh] relative overflow-hidden">
         <div className="absolute top-4 right-4 z-10">
-          <button
+          {/* <button
             onClick={onClose}
             className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
           >
             Close
-          </button>
+          </button> */}
         </div>
 
         <div className="w-full h-full">
