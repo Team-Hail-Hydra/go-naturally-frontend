@@ -8,6 +8,7 @@ import { MarkerManager } from "../utils/MarkerManager";
 import { LightPresetManager } from "../utils/LightPresetManager";
 
 function Map() {
+  const isDevelopment = import.meta.env.VITE_MODE === 'development';
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -223,7 +224,7 @@ function Map() {
       )}
 
       {/* Avatar creator button */}
-      {!avatarUrl && userLocation && (
+      {isDevelopment && !avatarUrl && userLocation && (
         <div className="absolute top-4 left-4 z-10">
           <button
             onClick={() => setShowAvatarCreator(true)}
@@ -235,7 +236,7 @@ function Map() {
       )}
 
       {/* Avatar status and controls */}
-      {avatarUrl && userLocation && (
+      {isDevelopment && avatarUrl && userLocation && (
         <div className="absolute top-4 left-4 z-10 space-y-2">
           <div className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg font-medium">
             Avatar Active
@@ -318,7 +319,7 @@ function Map() {
       {/* Map Controls - Top Right */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
         {/* Location status */}
-        {!userLocation && (
+        {!userLocation && isDevelopment && (
           <div className="bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm">
             Getting location...
           </div>
