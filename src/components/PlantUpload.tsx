@@ -34,13 +34,13 @@ function PlantUpload({ userLocation }: PlantUploadProps) {
   const handlePlantIdentification = async (file: File) => {
     setIsIdentifying(true);
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
-    
-    
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+
       // Convert image to base64
       const base64Image = await fileToBase64(file);
-      
+
       // Use user location if available, otherwise use dummy coordinates
       const latitude = userLocation ? userLocation[1] : 49.207;
       const longitude = userLocation ? userLocation[0] : 16.608;
@@ -65,7 +65,7 @@ function PlantUpload({ userLocation }: PlantUploadProps) {
 
       // Extract plant name from the first suggestion
       const plantName = plantIdResponse.data.result.classification.suggestions[0].name;
-      
+
       // Create FormData for rarity check
       const formData = new FormData();
       formData.append('file', file); // Send the actual file
@@ -83,9 +83,9 @@ function PlantUpload({ userLocation }: PlantUploadProps) {
             'Authorization': `Bearer ${token}`
           }
         },
-      
-       
-    );
+
+
+      );
 
       console.log('Rarity check result:', rarityResponse.data);
 
@@ -106,7 +106,7 @@ function PlantUpload({ userLocation }: PlantUploadProps) {
         alert('Please select an image file');
         return;
       }
-      
+
       // Check file size (limit to 10MB)
       if (file.size > 10 * 1024 * 1024) {
         alert('Image size should be less than 10MB');
@@ -126,7 +126,7 @@ function PlantUpload({ userLocation }: PlantUploadProps) {
   }
 
   return (
-    <div className="absolute top-32 left-4 z-10">
+    <div>
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -135,7 +135,7 @@ function PlantUpload({ userLocation }: PlantUploadProps) {
         onChange={handleFileSelect}
         className="hidden"
       />
-      
+
       <button
         onClick={handleUploadClick}
         disabled={isIdentifying}
@@ -155,7 +155,7 @@ function PlantUpload({ userLocation }: PlantUploadProps) {
           </>
         )}
       </button>
-    </div>
+    </div >
   );
 }
 

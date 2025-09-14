@@ -318,8 +318,8 @@ function Map() {
             <div>Q/E: Rotate View</div>
           </div>
 
-          {/* Plant Upload Component */}
           <PlantUpload userLocation={userLocation} />
+
 
           {/* Three dots menu button */}
           <div className="relative">

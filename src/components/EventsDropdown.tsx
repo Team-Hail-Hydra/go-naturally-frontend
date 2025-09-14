@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY || '';
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/utils/supabase';
 
 type UserRole = 'STUDENT' | 'TEACHER' | 'NGO';
 type TeacherTab = 'school-events' | 'ngo-events';
@@ -42,11 +38,11 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  
+
   // Simplified form state
   const [createEventForm, setCreateEventForm] = useState({
     title: '',
@@ -85,14 +81,14 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
 
   const loadEvents = async () => {
     if (!userRole || !userData) return;
-    
+
     setLoading(true);
     setError(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      
+
       let endpoint = '';
       let params = `?page=${currentPage}&limit=10`; // Show 10 events per page
 
@@ -141,7 +137,7 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      
+
       const eventData = {
         ...createEventForm,
         latitude: parseFloat(createEventForm.latitude),
@@ -149,7 +145,7 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
         schoolId: userData.schoolId
       };
 
-      const endpoint = userRole === 'NGO' 
+      const endpoint = userRole === 'NGO'
         ? 'http://localhost:3000/api/v1/ngo/event'
         : 'http://localhost:3000/api/v1/school/event';
 
@@ -180,8 +176,8 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      
-      const endpoint = userRole === 'NGO' 
+
+      const endpoint = userRole === 'NGO'
         ? 'http://localhost:3000/api/v1/ngo/event/apply'
         : 'http://localhost:3000/api/v1/school/event/apply';
 
@@ -204,7 +200,7 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      
+
       await axios.post('http://localhost:3000/api/v1/school/event', {
         title: event.title,
         description: event.description,
@@ -235,13 +231,13 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-20 z-40"
         onClick={onClose}
       />
-      
+
       {/* Dropdown */}
-      <div className="absolute right-0 top-12 w-96 bg-white/95 backdrop-blur-sm border border-gray-200 rounded-lg shadow-lg z-50 max-h-[80vh] overflow-hidden">
+      <div className="absolute left-0 top-12 w-96 bg-white/95 backdrop-blur-sm border border-gray-200 rounded-lg shadow-lg z-50 max-h-[80vh] overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex justify-between items-center">
@@ -253,7 +249,7 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
                 {userData?.name || 'User'}
               </p>
             </div>
-            <button 
+            <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600"
             >
@@ -278,21 +274,19 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
             <div className="flex mt-3 bg-gray-100 rounded p-1">
               <button
                 onClick={() => handleTeacherTabChange('school-events')}
-                className={`flex-1 px-3 py-1 text-sm rounded ${
-                  teacherTab === 'school-events'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600'
-                }`}
+                className={`flex-1 px-3 py-1 text-sm rounded ${teacherTab === 'school-events'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600'
+                  }`}
               >
                 School
               </button>
               <button
                 onClick={() => handleTeacherTabChange('ngo-events')}
-                className={`flex-1 px-3 py-1 text-sm rounded ${
-                  teacherTab === 'ngo-events'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600'
-                }`}
+                className={`flex-1 px-3 py-1 text-sm rounded ${teacherTab === 'ngo-events'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600'
+                  }`}
               >
                 NGO
               </button>
@@ -382,7 +376,7 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
                       <p className="text-xs text-gray-500 mb-2">
                         {new Date(event.date).toLocaleDateString()}
                       </p>
-                      
+
                       <div className="flex gap-2">
                         {/* Apply button for students */}
                         {userRole === 'STUDENT' && (
@@ -393,7 +387,7 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
                             Apply
                           </button>
                         )}
-                        
+
                         {/* Repost button for teachers viewing NGO events */}
                         {userRole === 'TEACHER' && teacherTab === 'ngo-events' && (
                           <button
