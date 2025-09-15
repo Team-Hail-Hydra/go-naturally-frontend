@@ -10,7 +10,7 @@ import EventsDropdown from './EventsDropdown';
 import PlantUpload from './PlantUpload'; // Import the new component
 
 function Map() {
-  const isDevelopment = import.meta.env.MODE === 'development';
+  const isDevelopment = import.meta.env.VITE_MODE === 'development';
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
