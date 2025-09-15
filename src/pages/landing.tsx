@@ -1,6 +1,17 @@
 import GoNaturallyLogo from "../assets/Go_Naturally_SingleLine.svg";
+import { supabase } from '@/utils/supabase';
+import { useEffect } from "react";
 
 const Landing = () => {
+    useEffect(() => {
+        // Check if user is authenticated
+        const checkAuth = async () => {
+            console.log('Checking authentication...');
+            const { data: { session } } = await supabase.auth.getSession();
+            console.log('Session data:', session);
+        };
+        checkAuth();    }, []);
+
     return (
         <div className="flex flex-col w-full">
             {/* Top Navigation */}

@@ -8,9 +8,10 @@ import { MarkerManager } from "../utils/MarkerManager";
 import { LightPresetManager } from "../utils/LightPresetManager";
 import EventsDropdown from './EventsDropdown';
 import PlantUpload from './PlantUpload'; // Import the new component
+import { supabase } from '@/utils/supabase';
 
 function Map() {
-  const isDevelopment = import.meta.env.VITE_MODE === 'development';
+  const isDevelopment = import.meta.env.MODE === 'development';
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,6 +28,7 @@ function Map() {
 
 
   useEffect(() => {
+    
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ?? "";
 
     const map = new mapboxgl.Map({

@@ -16,6 +16,12 @@ interface Event {
   longitude?: number;
   ngoId?: string;
   schoolId?: string;
+  ngo?: {
+    id: string;
+    name: string;
+    email: string;
+    phoneNo: string;
+  };
 }
 
 interface LitterReport {
@@ -25,6 +31,7 @@ interface LitterReport {
   latitude: number;
   longitude: number;
   createdById: string;
+  isAwarded: boolean;
   createdBy: {
     id: string;
     userId: string;
@@ -85,7 +92,7 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
 
   // Eco points modal state
   const [isEcoPointsModalOpen, setIsEcoPointsModalOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<{userId: string, name: string} | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<{userId: string, name: string, litterId: string} | null>(null);
   const [ecoPointsToAdd, setEcoPointsToAdd] = useState<number>(10);
   const [addingPoints, setAddingPoints] = useState(false);
 
@@ -178,6 +185,7 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
     setError(null);
 
     try {
+      console.log('Fetching events for role:', userRole);
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       console.log('Token:', token);
@@ -210,6 +218,7 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
       const response = await axios.get(`${endpoint}${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      console.log('Response data:', response.data);
 
       if (response?.data) {
         if (teacherTab === 'litter-reports') {
@@ -357,7 +366,8 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
         'http://localhost:3000/api/v1/eco-points/add',
         {
           userId: selectedStudent.userId,
-          points: ecoPointsToAdd
+          points: ecoPointsToAdd,
+          litterId: selectedStudent.litterId
         },
         {
           headers: {
@@ -384,8 +394,8 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
     }
   };
 
-  const openEcoPointsModal = (userId: string, name: string) => {
-    setSelectedStudent({ userId, name });
+  const openEcoPointsModal = (userId: string, name: string, litterId: string) => {
+    setSelectedStudent({ userId, name, litterId });
     setIsEcoPointsModalOpen(true);
     setEcoPointsToAdd(10); // Default points
   };
@@ -598,9 +608,19 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
                         {new Date(event.date).toLocaleDateString()}
                       </p>
 
+                      {/* NGO Contact Information - Only for NGO events */}
+                      {event.ngo && (
+                        <div className="mb-2 p-2 bg-blue-50 rounded border border-blue-200">
+                          <p className="text-xs font-medium text-blue-900 mb-1">Contact NGO:</p>
+                          <p className="text-xs text-blue-800">📧 {event.ngo.name}</p>
+                          <p className="text-xs text-blue-700">✉️ {event.ngo.email}</p>
+                          <p className="text-xs text-blue-700">📞 {event.ngo.phoneNo}</p>
+                        </div>
+                      )}
+
                       <div className="flex gap-2">
-                        {/* Apply button for students */}
-                        {userRole === 'STUDENT' && (
+                        {/* Apply button for students - only for school events */}
+                        {userRole === 'STUDENT' && !event.ngo && (
                           <button
                             onClick={() => handleQuickApply(event.id)}
                             className="flex-1 bg-green-600 text-white py-1 px-2 text-xs rounded hover:bg-green-700"
@@ -609,13 +629,27 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
                           </button>
                         )}
 
+                        {/* Contact button for NGO events */}
+                        {event.ngo && (
+                          <button
+                            onClick={() => {
+                              if (event.ngo) {
+                                window.open(`mailto:${event.ngo.email}?subject=Interest in ${event.title}&body=Hi ${event.ngo.name},%0A%0AI am interested in participating in the event "${event.title}" scheduled for ${new Date(event.date).toLocaleDateString()}.%0A%0APlease let me know the details for participation.%0A%0AThank you!`, '_blank');
+                              }
+                            }}
+                            className="flex-1 bg-blue-600 text-white py-1 px-2 text-xs rounded hover:bg-blue-700"
+                          >
+                            📧 Contact NGO
+                          </button>
+                        )}
+
                         {/* Repost button for teachers viewing NGO events */}
                         {userRole === 'TEACHER' && teacherTab === 'ngo-events' && (
                           <button
                             onClick={() => handleQuickRepost(event)}
-                            className="flex-1 bg-blue-600 text-white py-1 px-2 text-xs rounded hover:bg-blue-700"
+                            className="flex-1 bg-gray-600 text-white py-1 px-2 text-xs rounded hover:bg-gray-700 ml-2"
                           >
-                            Repost
+                            📋 Repost
                           </button>
                         )}
                       </div>
@@ -676,9 +710,16 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
                       </div>
                       
                       <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                        <span className="text-xs text-green-600 font-medium">
-                          ✓ Cleanup Completed
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-green-600 font-medium">
+                            ✓ Cleanup Completed
+                          </span>
+                          {report.isAwarded && (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                              🏆 Awarded
+                            </span>
+                          )}
+                        </div>
                         <div className="flex gap-2">
                           <button 
                             onClick={() => window.open(`https://maps.google.com/?q=${report.latitude},${report.longitude}`, '_blank')}
@@ -689,11 +730,16 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              openEcoPointsModal(report.createdBy.userId, report.createdBy.fullName);
+                              openEcoPointsModal(report.createdBy.userId, report.createdBy.fullName, report.id);
                             }}
-                            className="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded border border-green-300"
+                            disabled={report.isAwarded}
+                            className={`px-2 py-1 text-xs rounded border ${
+                              report.isAwarded
+                                ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                                : 'bg-green-100 hover:bg-green-200 text-green-700 border-green-300'
+                            }`}
                           >
-                            🏆 Award Points
+                            {report.isAwarded ? '✓ Points Awarded' : '🏆 Award Points'}
                           </button>
                         </div>
                       </div>
