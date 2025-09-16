@@ -1,11 +1,31 @@
 import { useEffect, useState } from "react"
-import type { User } from "@supabase/supabase-js"
 import axios from 'axios'
 import { supabase } from "../utils/supabase"
-import { useNavigate } from 'react-router-dom' // Make sure this is imported
+import { useNavigate } from 'react-router-dom'
+import { useUserStore, type UserRole } from '../store/userStore'
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { GraduationCap, Users, Heart, ArrowLeft, ChevronRight } from "lucide-react"
+import GoNaturallyLogo from "../assets/Go_Naturally_SingleLine.svg"
 
-type UserRole = 'STUDENT' | 'TEACHER' | 'NGO';
 type ActionType = 'create' | 'join' | 'individual';
+
+const roleConfig = {
+  STUDENT: {
+    icon: GraduationCap,
+    label: "Student",
+    description: "Join schools and access learning resources"
+  },
+  TEACHER: {
+    icon: Users,
+    label: "Teacher",
+    description: "Create or join schools and manage classes"
+  },
+  NGO: {
+    icon: Heart,
+    label: "NGO",
+    description: "Create or join NGOs and manage programs"
+  }
+};
 
 interface CreateOrganizationData {
   name: string;
@@ -18,9 +38,12 @@ interface JoinOrganizationData {
 }
 
 export default function Welcome() {
-  const navigate = useNavigate(); // Add this hook
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate();
+
+  // Zustand store
+  const { user, accessToken, setUser, setAccessToken, loading, setLoading } = useUserStore();
+
+  // Local state
   const [step, setStep] = useState<'role' | 'action' | 'details' | 'complete'>('role')
   const [selectedRole, setSelectedRole] = useState<UserRole>('STUDENT')
   const [selectedAction, setSelectedAction] = useState<ActionType>('join')
@@ -32,7 +55,6 @@ export default function Welcome() {
   const [joinData, setJoinData] = useState<JoinOrganizationData>({
     organizationCode: ''
   })
-  const [accessToken, setAccessToken] = useState<string>('')
 
   useEffect(() => {
     // Get current session (after OAuth redirect)
@@ -57,7 +79,7 @@ export default function Welcome() {
           if (userdata.data.schoolId || userdata.data.ngoId) {
             console.log("User already has organization, redirecting to dashboard");
             localStorage.setItem('userData', JSON.stringify(userdata.data));
-            navigate('/dashboard');
+            navigate('/game');
             return;
           }
         } catch (error) {
@@ -74,8 +96,6 @@ export default function Welcome() {
       setLoading(false)
     })
 
-
-
     // Listen for auth changes
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
@@ -87,7 +107,7 @@ export default function Welcome() {
     )
 
     return () => listener.subscription.unsubscribe()
-  }, [])
+  }, [navigate, setUser, setAccessToken, setLoading])
 
   // API call to create user
   const createUser = async () => {
@@ -262,285 +282,355 @@ export default function Welcome() {
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="bg-zinc-950 min-h-screen flex items-center justify-center">
+        <div className="text-zinc-200">Loading...</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Please log in to continue</p>
+      <div className="bg-zinc-950 min-h-screen flex items-center justify-center">
+        <div className="text-zinc-200">Please log in to continue</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
-        <div className="text-center mb-6">
-          <img
-            src={user.user_metadata.avatar_url}
-            alt="avatar"
-            className="w-16 h-16 rounded-full mx-auto mb-4"
-          />
-          <h1 className="text-2xl font-bold">
-            Welcome {user.user_metadata.full_name || user.email}!
-          </h1>
-        </div>
+    <div className="bg-zinc-950 py-20 text-zinc-200 selection:bg-zinc-600 min-h-screen relative overflow-hidden">
+      {/* Background Pattern */}
+      <div
+        className="absolute right-0 top-0 z-0 size-[50vw]"
+        style={{
+          backgroundImage: "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke-width='2' stroke='rgb(30 58 138 / 0.5)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e\")"
+        }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "radial-gradient(100% 100% at 100% 0%, rgba(9,9,11,0), rgba(9,9,11,1))"
+          }}
+        />
+      </div>
 
-        {/* Go Back Button */}
-        {step !== 'role' && (
-          <button
-            onClick={goBack}
-            className="mb-4 flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Go Back
-          </button>
-        )}
+      <div className="relative z-10 mx-auto w-full max-w-xl p-4">
+        <div>
+          {/* Logo */}
+          <img src={GoNaturallyLogo} alt="Go Naturally Logo" className="h-10 mb-6" />
 
-        {/* Role Selection Step */}
-        {step === 'role' && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-center">Select your role</h2>
-            <div className="space-y-3">
-              {(['STUDENT', 'TEACHER', 'NGO'] as UserRole[]).map((role) => (
-                <label key={role} className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+          {/* User Welcome */}
+          <div className="text-center mb-8">
+            <img
+              src={user.user_metadata.avatar_url}
+              alt="avatar"
+              className="w-16 h-16 rounded-full mx-auto mb-4 border-2 border-zinc-700"
+            />
+            <h1 className="text-xl font-semibold">
+              Welcome {user.user_metadata.full_name || user.email}!
+            </h1>
+          </div>
+
+          {/* Go Back Button */}
+          {step !== 'role' && (
+            <button
+              onClick={goBack}
+              className="z-0 flex items-center gap-2 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-3 py-1.5 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100 mb-6 text-sm"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Go Back
+            </button>
+          )}
+
+          {/* Role Selection Step */}
+          {step === 'role' && (
+            <div>
+              <div className="mb-9 mt-6 space-y-1.5">
+                <h2 className="text-2xl font-semibold text-center">Choose your role</h2>
+                <p className="text-zinc-400 text-center">Tell us about yourself to get started</p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <RadioGroup
+                  value={selectedRole}
+                  onValueChange={(value) => setSelectedRole(value as UserRole)}
+                  className="grid gap-3"
+                >
+                  {Object.entries(roleConfig).map(([role, config]) => {
+                    const Icon = config.icon;
+                    return (
+                      <div key={role} className="relative">
+                        <RadioGroupItem
+                          value={role}
+                          id={role}
+                          className="peer sr-only"
+                        />
+                        <label
+                          htmlFor={role}
+                          className="relative z-0 flex items-center gap-3 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-4 py-3 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100 cursor-pointer peer-data-[state=checked]:border-blue-500 peer-data-[state=checked]:bg-blue-500/20"
+                        >
+                          <Icon className="h-5 w-5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <div className="font-medium text-left">{config.label}</div>
+                            <div className="text-xs text-zinc-400 text-left">{config.description}</div>
+                          </div>
+                          <ChevronRight className="h-4 w-4 opacity-50" />
+                        </label>
+                      </div>
+                    );
+                  })}
+                </RadioGroup>
+              </div>
+
+              <button
+                onClick={handleRoleSubmit}
+                disabled={loading}
+                className="rounded-md bg-gradient-to-br from-blue-400 to-blue-700 px-4 py-2 text-lg text-zinc-50 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-zinc-950 transition-all hover:scale-[1.02] hover:ring-transparent active:scale-[0.98] active:ring-blue-500/70 w-full disabled:opacity-50"
+              >
+                {loading ? 'Setting up...' : 'Continue'}
+              </button>
+            </div>
+          )}
+
+          {/* Action Selection Step */}
+          {step === 'action' && (
+            <div>
+              <div className="mb-9 mt-6 space-y-1.5">
+                <h2 className="text-2xl font-semibold text-center">What would you like to do?</h2>
+                <p className="text-zinc-400 text-center">Choose your next step</p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                {selectedRole === 'STUDENT' && (
+                  <>
+                    <label className="relative z-0 flex items-center gap-3 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-4 py-3 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="action"
+                        value="join"
+                        checked={selectedAction === 'join'}
+                        onChange={(e) => setSelectedAction(e.target.value as ActionType)}
+                        className="sr-only"
+                      />
+                      <div className={`h-4 w-4 rounded-full border-2 transition-colors ${selectedAction === 'join' ? 'border-blue-500 bg-blue-500' : 'border-zinc-500'}`}>
+                        {selectedAction === 'join' && <div className="h-2 w-2 rounded-full bg-white mx-auto mt-[1px]" />}
+                      </div>
+                      <span className="font-medium">Join a School</span>
+                    </label>
+                    <label className="relative z-0 flex items-center gap-3 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-4 py-3 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="action"
+                        value="individual"
+                        checked={selectedAction === 'individual'}
+                        onChange={(e) => setSelectedAction(e.target.value as ActionType)}
+                        className="sr-only"
+                      />
+                      <div className={`h-4 w-4 rounded-full border-2 transition-colors ${selectedAction === 'individual' ? 'border-blue-500 bg-blue-500' : 'border-zinc-500'}`}>
+                        {selectedAction === 'individual' && <div className="h-2 w-2 rounded-full bg-white mx-auto mt-[1px]" />}
+                      </div>
+                      <span className="font-medium">Continue as Individual</span>
+                    </label>
+                  </>
+                )}
+
+                {selectedRole === 'TEACHER' && (
+                  <>
+                    <label className="relative z-0 flex items-center gap-3 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-4 py-3 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="action"
+                        value="create"
+                        checked={selectedAction === 'create'}
+                        onChange={(e) => setSelectedAction(e.target.value as ActionType)}
+                        className="sr-only"
+                      />
+                      <div className={`h-4 w-4 rounded-full border-2 transition-colors ${selectedAction === 'create' ? 'border-blue-500 bg-blue-500' : 'border-zinc-500'}`}>
+                        {selectedAction === 'create' && <div className="h-2 w-2 rounded-full bg-white mx-auto mt-[1px]" />}
+                      </div>
+                      <span className="font-medium">Create a School</span>
+                    </label>
+                    <label className="relative z-0 flex items-center gap-3 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-4 py-3 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="action"
+                        value="join"
+                        checked={selectedAction === 'join'}
+                        onChange={(e) => setSelectedAction(e.target.value as ActionType)}
+                        className="sr-only"
+                      />
+                      <div className={`h-4 w-4 rounded-full border-2 transition-colors ${selectedAction === 'join' ? 'border-blue-500 bg-blue-500' : 'border-zinc-500'}`}>
+                        {selectedAction === 'join' && <div className="h-2 w-2 rounded-full bg-white mx-auto mt-[1px]" />}
+                      </div>
+                      <span className="font-medium">Join a School</span>
+                    </label>
+                  </>
+                )}
+
+                {selectedRole === 'NGO' && (
+                  <>
+                    <label className="relative z-0 flex items-center gap-3 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-4 py-3 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="action"
+                        value="create"
+                        checked={selectedAction === 'create'}
+                        onChange={(e) => setSelectedAction(e.target.value as ActionType)}
+                        className="sr-only"
+                      />
+                      <div className={`h-4 w-4 rounded-full border-2 transition-colors ${selectedAction === 'create' ? 'border-blue-500 bg-blue-500' : 'border-zinc-500'}`}>
+                        {selectedAction === 'create' && <div className="h-2 w-2 rounded-full bg-white mx-auto mt-[1px]" />}
+                      </div>
+                      <span className="font-medium">Create an NGO</span>
+                    </label>
+                    <label className="relative z-0 flex items-center gap-3 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-4 py-3 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="action"
+                        value="join"
+                        checked={selectedAction === 'join'}
+                        onChange={(e) => setSelectedAction(e.target.value as ActionType)}
+                        className="sr-only"
+                      />
+                      <div className={`h-4 w-4 rounded-full border-2 transition-colors ${selectedAction === 'join' ? 'border-blue-500 bg-blue-500' : 'border-zinc-500'}`}>
+                        {selectedAction === 'join' && <div className="h-2 w-2 rounded-full bg-white mx-auto mt-[1px]" />}
+                      </div>
+                      <span className="font-medium">Join an NGO</span>
+                    </label>
+                  </>
+                )}
+              </div>
+
+              <button
+                onClick={handleActionSubmit}
+                className="rounded-md bg-gradient-to-br from-blue-400 to-blue-700 px-4 py-2 text-lg text-zinc-50 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-zinc-950 transition-all hover:scale-[1.02] hover:ring-transparent active:scale-[0.98] active:ring-blue-500/70 w-full"
+              >
+                Continue
+              </button>
+            </div>
+          )}
+
+          {/* Details Form Step - Create Organization */}
+          {step === 'details' && selectedAction === 'create' && (
+            <div>
+              <div className="mb-9 mt-6 space-y-1.5">
+                <h2 className="text-2xl font-semibold text-center">
+                  {selectedRole === 'TEACHER' ? 'Create School' : 'Create NGO'}
+                </h2>
+                <p className="text-zinc-400 text-center">Fill in the organization details</p>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-zinc-400 font-medium mb-2">
+                    {selectedRole === 'TEACHER' ? 'School Name' : 'NGO Name'}
+                  </label>
                   <input
-                    type="radio"
-                    name="role"
-                    value={role}
-                    checked={selectedRole === role}
-                    onChange={(e) => setSelectedRole(e.target.value as UserRole)}
-                    className="mr-3"
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder={`Enter ${selectedRole === 'TEACHER' ? 'school' : 'NGO'} name`}
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 placeholder-zinc-500 ring-1 ring-transparent transition-shadow focus:outline-0 focus:ring-blue-700 text-zinc-200"
+                    required
                   />
-                  <span className="capitalize font-medium">{role}</span>
-                </label>
-              ))}
-            </div>
-            <button
-              onClick={handleRoleSubmit}
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? 'Setting up...' : 'Continue'}
-            </button>
-          </div>
-        )}
+                </div>
 
-        {/* Action Selection Step */}
-        {step === 'action' && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-center">
-              What would you like to do?
-            </h2>
+                <div>
+                  <label className="block text-zinc-400 font-medium mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder={`Enter ${selectedRole === 'TEACHER' ? 'school' : 'NGO'} email`}
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 placeholder-zinc-500 ring-1 ring-transparent transition-shadow focus:outline-0 focus:ring-blue-700 text-zinc-200"
+                    required
+                  />
+                </div>
 
-            <div className="space-y-3">
-              {selectedRole === 'STUDENT' && (
-                <>
-                  <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="action"
-                      value="join"
-                      checked={selectedAction === 'join'}
-                      onChange={(e) => setSelectedAction(e.target.value as ActionType)}
-                      className="mr-3"
-                    />
-                    <span>Join a school</span>
-                  </label>
-                  <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="action"
-                      value="individual"
-                      checked={selectedAction === 'individual'}
-                      onChange={(e) => setSelectedAction(e.target.value as ActionType)}
-                      className="mr-3"
-                    />
-                    <span>Continue as individual</span>
-                  </label>
-                </>
-              )}
-
-              {selectedRole === 'TEACHER' && (
-                <>
-                  <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="action"
-                      value="create"
-                      checked={selectedAction === 'create'}
-                      onChange={(e) => setSelectedAction(e.target.value as ActionType)}
-                      className="mr-3"
-                    />
-                    <span>Create a school</span>
-                  </label>
-                  <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="action"
-                      value="join"
-                      checked={selectedAction === 'join'}
-                      onChange={(e) => setSelectedAction(e.target.value as ActionType)}
-                      className="mr-3"
-                    />
-                    <span>Join a school</span>
-                  </label>
-                </>
-              )}
-
-              {selectedRole === 'NGO' && (
-                <>
-                  <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="action"
-                      value="create"
-                      checked={selectedAction === 'create'}
-                      onChange={(e) => setSelectedAction(e.target.value as ActionType)}
-                      className="mr-3"
-                    />
-                    <span>Create an NGO</span>
-                  </label>
-                  <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="action"
-                      value="join"
-                      checked={selectedAction === 'join'}
-                      onChange={(e) => setSelectedAction(e.target.value as ActionType)}
-                      className="mr-3"
-                    />
-                    <span>Join an NGO</span>
-                  </label>
-                </>
-              )}
-            </div>
-
-            <button
-              onClick={handleActionSubmit}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-            >
-              Continue
-            </button>
-          </div>
-        )}
-
-        {/* Details Form Step - Create Organization */}
-        {step === 'details' && selectedAction === 'create' && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-center">
-              {selectedRole === 'TEACHER' ? 'Create School' : 'Create NGO'}
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  {selectedRole === 'TEACHER' ? 'School Name' : 'NGO Name'}
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder={`Enter ${selectedRole === 'TEACHER' ? 'school' : 'NGO'} name`}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <div>
+                  <label className="block text-zinc-400 font-medium mb-2">Phone Number</label>
+                  <input
+                    type="text"
+                    value={formData.phoneNo}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phoneNo: e.target.value }))}
+                    placeholder="Enter phone number"
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 placeholder-zinc-500 ring-1 ring-transparent transition-shadow focus:outline-0 focus:ring-blue-700 text-zinc-200"
+                    required
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder={`Enter ${selectedRole === 'TEACHER' ? 'school' : 'NGO'} email`}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Phone Number</label>
-                <input
-                  type="text"
-                  value={formData.phoneNo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phoneNo: e.target.value }))}
-                  placeholder="Enter phone number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
+              <button
+                onClick={handleDetailsSubmit}
+                disabled={loading || !formData.name || !formData.email || !formData.phoneNo}
+                className="rounded-md bg-gradient-to-br from-blue-400 to-blue-700 px-4 py-2 text-lg text-zinc-50 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-zinc-950 transition-all hover:scale-[1.02] hover:ring-transparent active:scale-[0.98] active:ring-blue-500/70 w-full disabled:opacity-50"
+              >
+                {loading ? 'Creating...' : `Create ${selectedRole === 'TEACHER' ? 'School' : 'NGO'}`}
+              </button>
             </div>
+          )}
 
-            <button
-              onClick={handleDetailsSubmit}
-              disabled={loading || !formData.name || !formData.email || !formData.phoneNo}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? 'Creating...' : `Create ${selectedRole === 'TEACHER' ? 'School' : 'NGO'}`}
-            </button>
-          </div>
-        )}
+          {/* Details Form Step - Join Organization - Simplified */}
+          {step === 'details' && selectedAction === 'join' && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-center text-zinc-200">
+                Join {selectedRole === 'STUDENT' || selectedRole === 'TEACHER' ? 'School' : 'NGO'}
+              </h2>
 
-        {/* Details Form Step - Join Organization - Simplified */}
-        {step === 'details' && selectedAction === 'join' && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-center">
-              Join {selectedRole === 'STUDENT' || selectedRole === 'TEACHER' ? 'School' : 'NGO'}
-            </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-zinc-400 font-medium mb-2">
+                    {selectedRole === 'STUDENT' || selectedRole === 'TEACHER' ? 'School Code' : 'NGO Code'}
+                  </label>
+                  <input
+                    type="text"
+                    value={joinData.organizationCode}
+                    onChange={(e) => setJoinData(prev => ({ ...prev, organizationCode: e.target.value }))}
+                    placeholder="Enter organization code"
+                    className="w-full border border-zinc-700 bg-zinc-900 px-3 py-2 placeholder-zinc-500 ring-1 ring-transparent transition-shadow focus:outline-0 focus:ring-blue-700 text-zinc-200 rounded-md"
+                    required
+                  />
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Ask your organization administrator for the invite code
+                  </p>
+                </div>
+              </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  {selectedRole === 'STUDENT' || selectedRole === 'TEACHER' ? 'School Code' : 'NGO Code'}
-                </label>
-                <input
-                  type="text"
-                  value={joinData.organizationCode}
-                  onChange={(e) => setJoinData(prev => ({ ...prev, organizationCode: e.target.value }))}
-                  placeholder="Enter organization code"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Ask your organization administrator for the invite code
+              <button
+                onClick={handleDetailsSubmit}
+                disabled={loading || !joinData.organizationCode}
+                className="rounded-md bg-gradient-to-br from-blue-400 to-blue-700 px-4 py-2 text-lg text-zinc-50 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-zinc-950 transition-all hover:scale-[1.02] hover:ring-transparent active:scale-[0.98] active:ring-blue-500/70 w-full disabled:opacity-50"
+              >
+                {loading ? 'Verifying Code...' : 'Join Organization'}
+              </button>
+            </div>
+          )}
+
+          {/* Complete Step */}
+          {step === 'complete' && (
+            <div className="text-center space-y-6">
+              <div className="text-green-500 text-6xl mb-6">✓</div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-semibold">Setup Complete!</h2>
+                <p className="text-zinc-400">
+                  {selectedAction === 'create'
+                    ? `Your ${selectedRole === 'TEACHER' ? 'school' : 'NGO'} has been created successfully.`
+                    : selectedAction === 'join'
+                      ? `Successfully joined organization!`
+                      : 'You can now continue as an individual student.'
+                  }
                 </p>
               </div>
+              <button
+                onClick={handleContinueToDashboard}
+                className="rounded-md bg-gradient-to-br from-blue-400 to-blue-700 px-4 py-2 text-lg text-zinc-50 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-zinc-950 transition-all hover:scale-[1.02] hover:ring-transparent active:scale-[0.98] active:ring-blue-500/70 w-full"
+              >
+                Continue to Dashboard
+              </button>
             </div>
-
-            <button
-              onClick={handleDetailsSubmit}
-              disabled={loading || !joinData.organizationCode}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? 'Verifying Code...' : 'Join Organization'}
-            </button>
-          </div>
-        )}
-
-        {/* Complete Step - UPDATED WITH SESSION STORAGE AND NAVIGATION */}
-        {step === 'complete' && (
-          <div className="text-center space-y-4">
-            <div className="text-green-600 text-6xl mb-4">✓</div>
-            <h2 className="text-xl font-semibold">Setup Complete!</h2>
-            <p className="text-gray-600">
-              {selectedAction === 'create'
-                ? `Your ${selectedRole === 'TEACHER' ? 'school' : 'NGO'} has been created successfully.`
-                : selectedAction === 'join'
-                  ? `Successfully joined organization!`
-                  : 'You can now continue as an individual student.'
-              }
-            </p>
-            <button
-              onClick={handleContinueToDashboard}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-            >
-              Continue to Dashboard
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

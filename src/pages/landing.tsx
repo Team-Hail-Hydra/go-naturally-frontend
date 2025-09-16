@@ -1,11 +1,13 @@
 import { motion, useScroll, useTransform, useMotionTemplate, useInView } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import GoNaturallyLogo from "../assets/Go_Naturally_SingleLine.svg";
 import { useScrollDirection } from "../hooks/useScrollDirection";
 import { parseSRT, getCurrentSubtitle, type Subtitle } from "../utils/srtParser";
 import { SRT_CONTENT } from "../constants/landing_page_video_subtitles";
 import AppScreenShot1 from "../assets/ss1.png";
 import { type TeamMember, teamMembers } from "@/constants/team";
+import { PWAInstallModal } from "../components/PWAInstallModal";
 
 // Video Control Bar Component
 const VideoControlBar = ({ videoRef, isVisible }: { videoRef: React.RefObject<HTMLVideoElement>; isVisible: boolean }) => {
@@ -454,13 +456,13 @@ const ParallaxImg = ({ className, alt, src, start, end, title, description }: Pa
 };
 
 // 3D Phone Components
-const FloatingPhone = () => {
+const FloatingPhone = ({ onDownloadClick }: { onDownloadClick?: () => void }) => {
     return (
         <div
             style={{
                 transformStyle: "preserve-3d",
                 transform: "rotateY(-30deg) rotateX(15deg)",
-            }}
+            } as React.CSSProperties}
             className="rounded-[24px] bg-green-500"
         >
             <motion.div
@@ -479,7 +481,7 @@ const FloatingPhone = () => {
                 className="relative h-[470px] w-[250px] rounded-[24px] border-2 border-b-4 border-r-4 border-white border-l-neutral-200 border-t-neutral-200 bg-neutral-900 p-1 pl-[3px] pt-[3px]"
             >
                 <HeaderBar />
-                <Screen />
+                <Screen onDownloadClick={onDownloadClick} />
             </motion.div>
         </div>
     );
@@ -501,7 +503,7 @@ const HeaderBar = () => {
     );
 };
 
-const Screen = () => {
+const Screen = ({ onDownloadClick }: { onDownloadClick?: () => void }) => {
     return (
         <div className="relative z-0 grid h-full w-full place-content-center overflow-hidden rounded-[20px">
             <img
@@ -510,7 +512,10 @@ const Screen = () => {
                 className="absolute h-full w-full object-cover"
             ></img>
 
-            <button className="absolute bottom-4 left-4 right-4 z-10 rounded-lg border-[1px] bg-white py-2 text-sm font-medium text-green-500 backdrop-blur border-green-500 hover:bg-green-50 transition-colors">
+            <button
+                onClick={onDownloadClick}
+                className="absolute bottom-4 left-4 right-4 z-10 rounded-lg border-[1px] bg-white py-2 text-sm font-medium text-green-500 backdrop-blur border-green-500 hover:bg-green-50 transition-colors"
+            >
                 Download Now
             </button>
 
@@ -563,7 +568,7 @@ const TeamCard = ({ member }: { member: TeamMember }) => {
         <div className="group relative h-[350px] w-[280px] md:h-[500px] md:w-[350px] overflow-hidden bg-black/60 backdrop-blur-sm border border-white/20 rounded-xl flex-shrink-0">
             <div
                 className="absolute inset-0 z-0 transition-transform duration-500 group-hover:scale-110 bg-cover bg-center"
-                style={{ backgroundImage: `url(${member.image})` }}
+                style={{ backgroundImage: `url(${member.image})` } as React.CSSProperties}
             ></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10"></div>
             <div className="absolute bottom-0 left-0 right-0 z-20 p-4 md:p-6 text-white">
@@ -677,7 +682,7 @@ const AnimatedHamburgerButton = ({ active, setActive }: { active: boolean; setAc
     );
 };
 
-const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+const MobileSidebar = ({ isOpen, onClose, navigate }: { isOpen: boolean; onClose: () => void; navigate: (path: string) => void }) => {
     const sidebarVariants = {
         open: { x: 0 },
         closed: { x: "-100%" }
@@ -759,7 +764,9 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            <button className="relative z-10 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 p-0.5 duration-300 w-full">
+                            <button
+                                onClick={() => navigate('/auth')}
+                                className="relative z-10 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 p-0.5 duration-300 w-full">
                                 <span className="block rounded-md bg-slate-950 px-6 py-3 font-semibold text-slate-100 duration-300 group-hover:bg-slate-950/50 group-hover:text-slate-50 group-active:bg-slate-950/80 text-base w-full">
                                     Play Now
                                 </span>
@@ -774,7 +781,7 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
 };
 
 // Header Play Button Component (shows after scrolling past hero)
-const HeaderPlayButton = () => {
+const HeaderPlayButton = ({ navigate }: { navigate: (path: string) => void }) => {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
@@ -798,7 +805,10 @@ const HeaderPlayButton = () => {
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
         >
-            <button className="relative z-10 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 p-0.5 duration-300 group-hover:scale-110">
+            <button
+                onClick={() => navigate('/auth')}
+                className="relative z-10 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 p-0.5 duration-300 group-hover:scale-110"
+            >
                 <span className="block rounded-md bg-slate-950 px-6 py-3 font-semibold text-slate-100 duration-300 group-hover:bg-slate-950/50 group-hover:text-slate-50 group-active:bg-slate-950/80 text-base">
                     Play Now
                 </span>
@@ -874,11 +884,13 @@ const LoadingScreen = ({ isLoading }: { isLoading: boolean }) => {
 };
 
 const Landing = () => {
+    const navigate = useNavigate();
     const { show } = useScrollDirection();
     const [showControls, setShowControls] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [videosLoaded, setVideosLoaded] = useState({ background: false, parallax: false });
     const [isPageLoaded, setIsPageLoaded] = useState(false);
+    const [showPWAPrompt, setShowPWAPrompt] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null!);
     const backgroundVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -1085,8 +1097,10 @@ const Landing = () => {
                             </motion.button>
                         </nav>
 
+
+
                         {/* Desktop Play Button */}
-                        <HeaderPlayButton />
+                        <HeaderPlayButton navigate={navigate} />
 
                         {/* Mobile Hamburger Menu */}
                         <AnimatedHamburgerButton
@@ -1100,6 +1114,7 @@ const Landing = () => {
                 <MobileSidebar
                     isOpen={mobileMenuOpen}
                     onClose={() => setMobileMenuOpen(false)}
+                    navigate={navigate}
                 />
 
                 {/* Hero Section */}
@@ -1114,7 +1129,7 @@ const Landing = () => {
                             <div className="flex flex-col lg:flex-row justify-center gap-2 md:gap-5 w-full mx-auto text-center text-3xl sm:text-4xl md:text-6xl leading-snug text-shine font-bold mb-8 md:mb-12">
                                 <h1 className="shrink-0">Experience the Life{" "}</h1>
                                 <span className="relative inline-block">
-                                    <h1 className="text-shine relative">Naturally
+                                    <h1 className="relative text-green-500">Naturally
                                         <svg
                                             viewBox="0 0 286 73"
                                             fill="none"
@@ -1143,7 +1158,10 @@ const Landing = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.8, ease: "easeOut", delay: 1.5 }}
                             >
-                                <button className="relative z-10 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 p-0.5 duration-300 group-hover:scale-110">
+                                <button
+                                    onClick={() => navigate('/auth')}
+                                    className="relative z-10 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 p-0.5 duration-300 group-hover:scale-110"
+                                >
                                     <span className="block rounded-md bg-slate-950 px-6 md:px-8 py-3 md:py-4 font-semibold text-slate-100 duration-300 group-hover:bg-slate-950/50 group-hover:text-slate-50 group-active:bg-slate-950/80 text-base md:text-lg">
                                         Play Now
                                     </span>
@@ -1250,7 +1268,7 @@ const Landing = () => {
                                     variants={staggerItem}
                                 >
                                     <div className="transform scale-75 md:scale-100">
-                                        <FloatingPhone />
+                                        <FloatingPhone onDownloadClick={() => setShowPWAPrompt(true)} />
                                     </div>
                                 </motion.div>
                             </div>
@@ -1292,7 +1310,10 @@ const Landing = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.8, ease: "easeOut", delay: 1.5 }}
                                 >
-                                    <button className="relative z-10 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 p-0.5 duration-300 group-hover:scale-110">
+                                    <button
+                                        onClick={() => setShowPWAPrompt(true)}
+                                        className="relative z-10 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 p-0.5 duration-300 group-hover:scale-110"
+                                    >
                                         <span className="block rounded-md bg-slate-950 px-6 py-3 md:px-8 md:py-4 font-semibold text-slate-100 duration-300 group-hover:bg-slate-950/50 group-hover:text-slate-50 group-active:bg-slate-950/80 text-base md:text-lg">
                                             Download Now
                                         </span>
@@ -1380,6 +1401,9 @@ const Landing = () => {
 
                 <VideoControlBar videoRef={videoRef} isVisible={showControls} />
             </div>
+
+            {/* PWA Install Modal */}
+            <PWAInstallModal open={showPWAPrompt} setOpen={setShowPWAPrompt} />
         </>
     );
 };

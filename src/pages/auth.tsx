@@ -1,96 +1,65 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Mail, GraduationCap, Users, Heart } from "lucide-react";
-import { authService, type UserRole } from "../utils/oauth";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { authService } from "../utils/oauth";
 import { useToast } from "@/hooks/use-toast";
-
-const roleConfig = {
-  student: {
-    icon: GraduationCap,
-    label: "Student",
-    description: "Join schools and access learning resources"
-  },
-  teacher: {
-    icon: Users,
-    label: "Teacher",
-    description: "Create or join schools and manage classes"
-  },
-  ngo: {
-    icon: Heart,
-    label: "NGO",
-    description: "Create or join NGOs and manage programs"
-  }
-};
+import { PWAInstallModal } from "@/components/PWAInstallModal";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
+import GoogleLogo from "../assets/google.svg";
+import GoNaturallyLogo from "../assets/Go_Naturally_SingleLine.svg";
 
 export default function AuthPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'student' as UserRole
-  });
-  const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [showPWAPrompt, setShowPWAPrompt] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // PWA Install functionality
+  const { canInstall, isInstalled, isPWA } = usePWAInstall();
 
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Password mismatch",
-        description: "Please make sure your passwords match."
-      });
+  // Auto-show PWA install prompt when page loads
+  useEffect(() => {
+    console.log("PWA Install Check:", { canInstall, isInstalled, isPWA });
+
+    // Don't show if already installed or running as PWA
+    if (isInstalled || isPWA) {
+      console.log("PWA already installed or running as PWA");
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast({
-        variant: "destructive",
-        title: "Password too short",
-        description: "Password must be at least 6 characters long."
-      });
+    // Don't show if user has already been prompted recently
+    const lastPrompted = localStorage.getItem("pwa-install-last-prompted");
+    const now = Date.now();
+    const oneWeek = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
+
+    if (lastPrompted && now - parseInt(lastPrompted) < oneWeek) {
+      console.log("User was prompted recently, skipping");
       return;
     }
 
-    setLoading(true);
-
-    try {
-      const user = await authService.signUp(formData.email, formData.password, formData.name, formData.role);
-      toast({
-        title: "Account created!",
-        description: "Welcome! Please check your email to verify your account."
-      });
-      // Navigate to role-specific onboarding or welcome page
-      navigate('/onboarding', { state: { role: formData.role, user } });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-      toast({
-        variant: "destructive",
-        title: "Registration failed",
-        description: errorMessage
-      });
-    } finally {
-      setLoading(false);
+    // Clear old prompt data for testing
+    if (process.env.NODE_ENV === 'development') {
+      localStorage.removeItem("pwa-install-last-prompted");
     }
-  };
+
+    // Show prompt after a delay if installable
+    if (canInstall) {
+      console.log("Setting timer to show PWA prompt");
+      const timer = setTimeout(() => {
+        console.log("Showing PWA install prompt");
+        setShowPWAPrompt(true);
+        localStorage.setItem("pwa-install-last-prompted", now.toString());
+      }, 1000); // Show after 1 second on auth page for faster testing
+
+      return () => clearTimeout(timer);
+    } else {
+      console.log("PWA not installable, canInstall:", canInstall);
+    }
+  }, [canInstall, isInstalled, isPWA]);
 
   const handleGoogleSignIn = async () => {
     setOauthLoading(true);
 
     try {
-      // Store selected role in localStorage before OAuth redirect
-      localStorage.setItem('pendingUserRole', formData.role);
-
       await authService.signInWithGoogle(`${window.location.origin}/welcome`);
 
       toast({
@@ -109,139 +78,68 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-background/80 p-4">
-      <Card className="w-full max-w-md shadow-card border-border/50">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Create Account
-          </CardTitle>
-          <CardDescription>
-            Choose your role and get started
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Role Selection - Show before OAuth */}
-          <div className="space-y-3">
-            <Label>I am a...</Label>
-            <RadioGroup
-              value={formData.role}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, role: value as UserRole }))}
-              className="grid gap-3"
-            >
-              {Object.entries(roleConfig).map(([role, config]) => {
-                const Icon = config.icon;
-                return (
-                  <div key={role} className="relative">
-                    <RadioGroupItem
-                      value={role}
-                      id={role}
-                      className="peer sr-only"
-                    />
-                    <Label
-                      htmlFor={role}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border/50 cursor-pointer hover:border-primary/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
-                    >
-                      <Icon className="h-5 w-5 text-primary" />
-                      <div className="flex-1">
-                        <div className="font-medium">{config.label}</div>
-                        <div className="text-xs text-muted-foreground">{config.description}</div>
-                      </div>
-                    </Label>
-                  </div>
-                );
-              })}
-            </RadioGroup>
-          </div>
+    <div className="bg-zinc-950 py-20 text-zinc-200 selection:bg-zinc-600 min-h-screen relative overflow-hidden">
+      {/* Background Pattern */}
+      <div
+        className="absolute right-0 top-0 z-0 size-[50vw]"
+        style={{
+          backgroundImage: "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke-width='2' stroke='rgb(30 58 138 / 0.5)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e\")"
+        }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "radial-gradient(100% 100% at 100% 0%, rgba(9,9,11,0), rgba(9,9,11,1))"
+          }}
+        />
+      </div>
 
-          {/* Google OAuth Button */}
-          <Button
-            onClick={handleGoogleSignIn}
-            disabled={oauthLoading}
-            className="w-full border-border/50 hover:border-primary/50 hover:bg-primary/5"
-            variant="outline"
-          >
-            <Mail className="mr-2 h-4 w-4" />
-            {oauthLoading ? 'Redirecting to Google...' : 'Continue with Google'}
-          </Button>
+      {/* Back Button */}
+      <Link
+        to="/"
+        className="z-0 flex items-center gap-2 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-3 py-1.5 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100 absolute left-4 top-6 text-sm"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Go back
+      </Link>
 
-          <div className="relative">
-            <Separator />
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-              Or create with email
-            </div>
-          </div>
+      <div className="relative z-10 mx-auto w-full max-w-xl p-4">
+        <div>
+          {/* Logo */}
+          <img src={GoNaturallyLogo} alt="Go Naturally Logo" className="h-10 mb-6" />
 
-          {/* Registration Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  required
-                  className="border-border/50 focus:border-primary"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  required
-                  className="border-border/50 focus:border-primary"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Create a password (min. 6 characters)"
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  required
-                  minLength={6}
-                  className="border-border/50 focus:border-primary"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  required
-                  className="border-border/50 focus:border-primary"
-                />
-              </div>
+          {/* Authentication */}
+          <div>
+            <div className="mb-9 mt-6 space-y-1.5">
+              <h1 className="text-2xl font-semibold">Welcome to Go Naturally</h1>
+              <p className="text-zinc-400">
+                Sign in to start your environmental journey
+              </p>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full bg-gradient-primary hover:opacity-90 shadow-glow"
-              disabled={loading}
-            >
-              {loading ? "Creating Account..." : "Create Account"}
-            </Button>
-          </form>
+            <div>
+              <button
+                onClick={handleGoogleSignIn}
+                disabled={oauthLoading}
+                className="relative z-0 items-center gap-2 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-3 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100 flex w-full justify-center py-3"
+              >
+                <img src={GoogleLogo} alt="Google Logo" className="h-5 w-5" />
+                {oauthLoading ? 'Redirecting to Google...' : 'Continue with Google'}
+              </button>
+            </div>
 
-          <div className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link to="/login" className="text-primary hover:underline">
-              Sign in
-            </Link>
+            <p className="mt-9 text-xs text-zinc-400">
+              By signing in, you agree to our{" "}
+              <a href="#" className="text-blue-400 hover:underline">Terms & Conditions</a>{" "}
+              and{" "}
+              <a href="#" className="text-blue-400 hover:underline">Privacy Policy.</a>
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* PWA Install Modal */}
+      <PWAInstallModal open={showPWAPrompt} setOpen={setShowPWAPrompt} />
     </div>
   );
 }
