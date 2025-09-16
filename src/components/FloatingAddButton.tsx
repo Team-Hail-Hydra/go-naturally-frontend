@@ -158,17 +158,17 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
               const radius = 100;
               const x = Math.cos((angle * Math.PI) / 180) * radius;
               const y = Math.sin((angle * Math.PI) / 180) * radius;
-              
+
               return (
                 <motion.div
                   key={section.id}
                   initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
                   animate={{ opacity: 1, scale: 1, x: x, y: -y }} // Negative y to place above
                   exit={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-                  transition={{ 
-                    duration: 0.3, 
+                  transition={{
+                    duration: 0.3,
                     delay: index * 0.1,
-                    ease: "easeOut" 
+                    ease: "easeOut"
                   }}
                   className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40"
                   style={{
@@ -214,7 +214,7 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                   <X className="h-5 w-5" />
                 </Button>
               </div>
-              
+
               {/* Section content */}
               {activeSection === 'plant' && (
                 <div className="space-y-4">
@@ -223,8 +223,8 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                       <p className="text-sm text-muted-foreground">
                         Upload a plant image to identify the species and contribute to our ecosystem database.
                       </p>
-                      <PlantUpload 
-                        userLocation={userLocation} 
+                      <PlantUpload
+                        userLocation={userLocation}
                         onUploadSuccess={handlePlantUploadSuccess}
                       />
                     </>
@@ -237,10 +237,10 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                           <span className="font-semibold text-yellow-600">+{plantData.plant.ecopoints} EcoPoints</span>
                         </div>
                       </div>
-                      
+
                       <div className="relative">
-                        <img 
-                          src={plantData.plant.plant.imageUrl} 
+                        <img
+                          src={plantData.plant.plant.imageUrl}
                           alt={plantData.plant.plant.plantName}
                           className="w-full h-48 object-cover rounded-lg"
                         />
@@ -248,33 +248,33 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                           Rarity: {plantData.plant.plant.rarity}/5
                         </div>
                       </div>
-                      
+
                       <div className="space-y-3">
                         <h4 className="text-xl font-bold text-center">{plantData.plant.plant.plantName}</h4>
-                        
+
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="h-4 w-4" />
                           <span>{plantData.plant.plant.latitude.toFixed(6)}, {plantData.plant.plant.longitude.toFixed(6)}</span>
                         </div>
-                        
+
                         <div className="bg-green-50 p-3 rounded-lg">
                           <p className="text-sm leading-relaxed">
-                            {plantData.plant.plant.description.length > 200 
-                              ? `${plantData.plant.plant.description.substring(0, 200)}...` 
+                            {plantData.plant.plant.description.length > 200
+                              ? `${plantData.plant.plant.description.substring(0, 200)}...`
                               : plantData.plant.plant.description
                             }
                           </p>
                         </div>
-                        
+
                         <div className="flex gap-2">
-                          <Button 
+                          <Button
                             onClick={handleBackToMenu}
                             className="flex-1"
                             variant="outline"
                           >
                             Upload Another
                           </Button>
-                          <Button 
+                          <Button
                             onClick={toggleMenu}
                             className="flex-1"
                           >
@@ -286,7 +286,7 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                   )}
                 </div>
               )}
-              
+
               {activeSection === 'animal' && (
                 <div className="space-y-4">
                   {!animalData ? (
@@ -294,8 +294,8 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                       <p className="text-sm text-muted-foreground">
                         Capture wildlife photos to help track biodiversity in your area.
                       </p>
-                      <AnimalUpload 
-                        userLocation={userLocation} 
+                      <AnimalUpload
+                        userLocation={userLocation}
                         onUploadSuccess={handleAnimalUploadSuccess}
                       />
                     </>
@@ -308,10 +308,10 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                           <span className="font-semibold text-yellow-600">+{animalData.animal.ecopoints} EcoPoints</span>
                         </div>
                       </div>
-                      
+
                       <div className="relative">
-                        <img 
-                          src={animalData.animal.animal.imageUrl} 
+                        <img
+                          src={animalData.animal.animal.imageUrl}
                           alt={animalData.animal.animal.name}
                           className="w-full h-48 object-cover rounded-lg"
                         />
@@ -319,10 +319,10 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                           Rarity: {animalData.animal.animal.rarity}/5
                         </div>
                       </div>
-                      
+
                       <div className="space-y-3">
                         <h4 className="text-xl font-bold text-center">{animalData.animal.animal.name}</h4>
-                        
+
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="h-4 w-4" />
                           <span>{animalData.animal.animal.latitude.toFixed(6)}, {animalData.animal.animal.longitude.toFixed(6)}</span>
@@ -332,25 +332,25 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                           <Clock className="h-4 w-4" />
                           <span>Life Span: {animalData.animal.animal.average_life_span}</span>
                         </div>
-                        
+
                         <div className="bg-blue-50 p-3 rounded-lg">
                           <p className="text-sm leading-relaxed">
-                            {animalData.animal.animal.description.length > 200 
-                              ? `${animalData.animal.animal.description.substring(0, 200)}...` 
+                            {animalData.animal.animal.description.length > 200
+                              ? `${animalData.animal.animal.description.substring(0, 200)}...`
                               : animalData.animal.animal.description
                             }
                           </p>
                         </div>
-                        
+
                         <div className="flex gap-2">
-                          <Button 
+                          <Button
                             onClick={handleBackToMenu}
                             className="flex-1"
                             variant="outline"
                           >
                             Upload Another
                           </Button>
-                          <Button 
+                          <Button
                             onClick={toggleMenu}
                             className="flex-1"
                           >
@@ -362,7 +362,7 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                   )}
                 </div>
               )}
-              
+
               {activeSection === 'litter' && (
                 <div className="space-y-4">
                   {!litterSubmitted ? (
@@ -370,8 +370,8 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                       <p className="text-sm text-muted-foreground">
                         Report litter in your area with before and after cleanup photos.
                       </p>
-                      <LitterUpload 
-                        userLocation={userLocation} 
+                      <LitterUpload
+                        userLocation={userLocation}
                         onUploadSuccess={handleLitterUploadSuccess}
                       />
                     </>
@@ -385,16 +385,16 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
                         <p className="text-sm text-gray-600 mb-4">
                           Your litter report has been submitted successfully. Thank you for helping clean our environment!
                         </p>
-                        
+
                         <div className="flex gap-2">
-                          <Button 
+                          <Button
                             onClick={handleBackToMenu}
                             className="flex-1"
                             variant="outline"
                           >
                             Report More
                           </Button>
-                          <Button 
+                          <Button
                             onClick={toggleMenu}
                             className="flex-1"
                           >

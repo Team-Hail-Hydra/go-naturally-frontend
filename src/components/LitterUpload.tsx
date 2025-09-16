@@ -1,10 +1,5 @@
 import { useRef, useState } from 'react';
-import { createClient } from "@supabase/supabase-js";
-import axios from 'axios';
-
-const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY || '';
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { apiClient } from "../lib/apiClient";
 
 interface LitterUploadProps {
   userLocation?: [number, number] | null;
@@ -17,7 +12,7 @@ function LitterUpload({ userLocation, onUploadSuccess }: LitterUploadProps) {
   const [afterImage, setAfterImage] = useState<File | null>(null);
   const [beforePreview, setBeforePreview] = useState<string | null>(null);
   const [afterPreview, setAfterPreview] = useState<string | null>(null);
-  
+
   const beforeFileInputRef = useRef<HTMLInputElement | null>(null);
   const afterFileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -30,13 +25,6 @@ function LitterUpload({ userLocation, onUploadSuccess }: LitterUploadProps) {
 
     setIsUploading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
       // Use user location if available, otherwise use dummy coordinates
       const latitude = userLocation ? userLocation[1] : 22.22;
       const longitude = userLocation ? userLocation[0] : 13.1;
@@ -49,19 +37,10 @@ function LitterUpload({ userLocation, onUploadSuccess }: LitterUploadProps) {
       formData.append('longitude', longitude.toString());
 
       // Send litter upload request
-      const litterResponse = await axios.post(
-        'http://localhost:3000/api/v1/litter/upload',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
+      const litterResponse = await apiClient.litter.upload(formData);
 
       console.log('Litter upload result:', litterResponse.data);
-      
+
       // Call the success callback if provided
       if (onUploadSuccess) {
         onUploadSuccess();
@@ -72,7 +51,7 @@ function LitterUpload({ userLocation, onUploadSuccess }: LitterUploadProps) {
       setAfterImage(null);
       setBeforePreview(null);
       setAfterPreview(null);
-      
+
       alert('Litter report submitted successfully! Thank you for helping clean the environment.');
 
     } catch (error) {
@@ -100,7 +79,7 @@ function LitterUpload({ userLocation, onUploadSuccess }: LitterUploadProps) {
       }
 
       setBeforeImage(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -127,7 +106,7 @@ function LitterUpload({ userLocation, onUploadSuccess }: LitterUploadProps) {
       }
 
       setAfterImage(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -171,14 +150,14 @@ function LitterUpload({ userLocation, onUploadSuccess }: LitterUploadProps) {
         {/* Before Image */}
         <div className="space-y-2">
           <h4 className="font-medium text-sm text-center">Before Photo</h4>
-          <div 
+          <div
             onClick={handleBeforeClick}
             className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-red-400 transition-colors bg-gray-50 hover:bg-red-50"
           >
             {beforePreview ? (
-              <img 
-                src={beforePreview} 
-                alt="Before" 
+              <img
+                src={beforePreview}
+                alt="Before"
                 className="w-full h-full object-cover rounded-lg"
               />
             ) : (
@@ -195,14 +174,14 @@ function LitterUpload({ userLocation, onUploadSuccess }: LitterUploadProps) {
         {/* After Image */}
         <div className="space-y-2">
           <h4 className="font-medium text-sm text-center">After Photo</h4>
-          <div 
+          <div
             onClick={handleAfterClick}
             className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-green-400 transition-colors bg-gray-50 hover:bg-green-50"
           >
             {afterPreview ? (
-              <img 
-                src={afterPreview} 
-                alt="After" 
+              <img
+                src={afterPreview}
+                alt="After"
                 className="w-full h-full object-cover rounded-lg"
               />
             ) : (

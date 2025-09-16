@@ -1,10 +1,6 @@
 import { useRef, useState } from 'react';
-import { createClient } from "@supabase/supabase-js";
+import { apiClient } from "../lib/apiClient";
 import axios from 'axios';
-
-const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY || '';
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface PlantData {
   plant: {
@@ -51,10 +47,6 @@ function PlantUpload({ userLocation, onUploadSuccess }: PlantUploadProps) {
   const handlePlantIdentification = async (file: File) => {
     setIsIdentifying(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-
       // Convert image to base64
       const base64Image = await fileToBase64(file);
 
@@ -91,24 +83,13 @@ function PlantUpload({ userLocation, onUploadSuccess }: PlantUploadProps) {
       formData.append('longitude', longitude.toString());
 
       // Send rarity check request
-      const rarityResponse = await axios.post(
-        'http://localhost:3000/api/v1/plants/upload',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
-          }
-        },
-
-
-      );
+      const rarityResponse = await apiClient.plants.upload(formData);
 
       console.log('Rarity check result:', rarityResponse.data);
-      
+
       // Call the success callback if provided
       if (onUploadSuccess && rarityResponse.data) {
-        onUploadSuccess(rarityResponse.data);
+        onUploadSuccess(rarityResponse.data as PlantData);
       }
 
     } catch (error) {

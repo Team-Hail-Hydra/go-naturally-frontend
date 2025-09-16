@@ -1,10 +1,5 @@
 import { useRef, useState } from 'react';
-import { createClient } from "@supabase/supabase-js";
-import axios from 'axios';
-
-const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY || '';
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { apiClient } from "../lib/apiClient";
 
 interface AnimalData {
   animal: {
@@ -38,13 +33,6 @@ function AnimalUpload({ userLocation, onUploadSuccess }: AnimalUploadProps) {
   const handleAnimalUpload = async (file: File) => {
     setIsUploading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
       // Use user location if available, otherwise use dummy coordinates
       const latitude = userLocation ? userLocation[1] : 22.22;
       const longitude = userLocation ? userLocation[0] : 13.1;
@@ -56,22 +44,13 @@ function AnimalUpload({ userLocation, onUploadSuccess }: AnimalUploadProps) {
       formData.append('longitude', longitude.toString());
 
       // Send animal upload request
-      const animalResponse = await axios.post(
-        'http://localhost:3000/api/v1/animal/upload',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
+      const animalResponse = await apiClient.animals.upload(formData);
 
       console.log('Animal upload result:', animalResponse.data);
-      
+
       // Call the success callback if provided
       if (onUploadSuccess && animalResponse.data) {
-        onUploadSuccess(animalResponse.data);
+        onUploadSuccess(animalResponse.data as AnimalData);
       }
 
     } catch (error) {

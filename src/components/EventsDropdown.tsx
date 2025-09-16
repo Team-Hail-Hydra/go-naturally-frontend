@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { supabase } from '@/utils/supabase';
+import { apiClient } from '../lib/apiClient';
 
 type UserRole = 'STUDENT' | 'TEACHER' | 'NGO';
 type TeacherTab = 'school-events' | 'ngo-events';
@@ -86,38 +85,32 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
     setError(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      let endpoint = '';
       let params = `?page=${currentPage}&limit=10`; // Show 10 events per page
+      let response;
 
       switch (userRole) {
         case 'STUDENT':
-          endpoint = 'http://localhost:3000/api/v1/school/events';
           params += `&schoolId=${userData.schoolId}`;
+          response = await apiClient.events.getSchoolEvents(params);
           break;
         case 'TEACHER':
           if (teacherTab === 'school-events') {
-            endpoint = 'http://localhost:3000/api/v1/school/events';
             params += `&schoolId=${userData.schoolId}`;
+            response = await apiClient.events.getSchoolEvents(params);
           } else {
-            endpoint = 'http://localhost:3000/api/v1/ngo/events';
+            response = await apiClient.events.getNGOEvents(params);
           }
           break;
         case 'NGO':
-          endpoint = 'http://localhost:3000/api/v1/ngo/events';
           params += `&ngoId=${userData.ngoId}`;
+          response = await apiClient.events.getNGOEvents(params);
           break;
       }
 
-      const response = await axios.get(`${endpoint}${params}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
       if (response?.data) {
-        setEvents(response.data.events); // Show all events from response
-        setTotalPages(response.data.totalPages || 1); // Set total pages
+        const eventData = response.data as { events: Event[], totalPages: number };
+        setEvents(eventData.events); // Show all events from response
+        setTotalPages(eventData.totalPages || 1); // Set total pages
       }
     } catch (error) {
       console.error('Error loading events:', error);
@@ -135,9 +128,6 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
     setError(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
       const eventData = {
         ...createEventForm,
         latitude: parseFloat(createEventForm.latitude),
@@ -145,16 +135,11 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
         schoolId: userData.schoolId
       };
 
-      const endpoint = userRole === 'NGO'
-        ? 'http://localhost:3000/api/v1/ngo/event'
-        : 'http://localhost:3000/api/v1/school/event';
-
-      await axios.post(endpoint, eventData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      if (userRole === 'NGO') {
+        await apiClient.events.createNGOEvent(eventData);
+      } else {
+        await apiClient.events.createSchoolEvent(eventData);
+      }
 
       // Reset form and switch back to events
       setCreateEventForm({ title: '', description: '', date: '', latitude: '', longitude: '' });
@@ -174,19 +159,13 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
     if (!userRole || !userData) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
+      const applicationData = { userId: userData.id, eventId };
 
-      const endpoint = userRole === 'NGO'
-        ? 'http://localhost:3000/api/v1/ngo/event/apply'
-        : 'http://localhost:3000/api/v1/school/event/apply';
-
-      await axios.post(endpoint, { userId: userData.id, eventId }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      if (userRole === 'NGO') {
+        await apiClient.events.applyToNGOEvent(applicationData);
+      } else {
+        await apiClient.events.applyToSchoolEvent(applicationData);
+      }
 
       alert('Applied successfully!');
     } catch (error) {
@@ -198,22 +177,16 @@ export default function EventsDropdown({ isOpen, onClose }: EventsDropdownProps)
     if (userRole !== 'TEACHER' || !userData) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      await axios.post('http://localhost:3000/api/v1/school/event', {
+      const eventData = {
         title: event.title,
         description: event.description,
         date: event.date,
         latitude: event.latitude,
         longitude: event.longitude,
         schoolId: userData.schoolId
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      };
+
+      await apiClient.events.createSchoolEvent(eventData);
 
       alert('Event reposted successfully!');
     } catch (error) {

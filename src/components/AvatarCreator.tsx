@@ -52,7 +52,7 @@ export default function AvatarCreator({
           )}
 
           <RPMAvatarCreator
-            subdomain="demo"
+            subdomain="gonaturally"
             config={config}
             style={style}
             onAvatarExported={handleOnAvatarExported}

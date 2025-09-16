@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react"
-import axios from 'axios'
-import { supabase } from "../utils/supabase"
+import { apiClient, supabase } from "../lib/apiClient"
 import { useNavigate } from 'react-router-dom'
 import { useUserStore, type UserRole } from '../store/userStore'
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { GraduationCap, Users, Heart, ArrowLeft, ChevronRight } from "lucide-react"
 import GoNaturallyLogo from "../assets/Go_Naturally_SingleLine.svg"
+import AvatarCreator from "../components/AvatarCreator"
 
 type ActionType = 'create' | 'join' | 'individual';
 
@@ -41,10 +41,11 @@ export default function Welcome() {
   const navigate = useNavigate();
 
   // Zustand store
-  const { user, accessToken, setUser, setAccessToken, loading, setLoading } = useUserStore();
+  const { user, accessToken, setUser, setAccessToken, loading, setLoading, setAvatarUrl } = useUserStore();
 
   // Local state
-  const [step, setStep] = useState<'role' | 'action' | 'details' | 'complete'>('role')
+  const [step, setStep] = useState<'role' | 'action' | 'details' | 'avatar'>('role')
+  const [showAvatarCreator, setShowAvatarCreator] = useState(false)
   const [selectedRole, setSelectedRole] = useState<UserRole>('STUDENT')
   const [selectedAction, setSelectedAction] = useState<ActionType>('join')
   const [formData, setFormData] = useState<CreateOrganizationData>({
@@ -67,16 +68,12 @@ export default function Welcome() {
 
         try {
           // Check if user already belongs to a school or NGO
-          const userdata = await axios.get(`http://localhost:3000/api/v1/user/${session.user.id}`, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.access_token}`
-            }
-          });
+          const userdata = await apiClient.user.getById(session.user.id);
           console.log("Fetched user data:", userdata.data);
 
           // If user has either schoolId or ngoId, redirect to dashboard
-          if (userdata.data.schoolId || userdata.data.ngoId) {
+          const userData = userdata.data as { schoolId?: string, ngoId?: string };
+          if (userData.schoolId || userData.ngoId) {
             console.log("User already has organization, redirecting to dashboard");
             localStorage.setItem('userData', JSON.stringify(userdata.data));
             navigate('/game');
@@ -124,20 +121,10 @@ export default function Welcome() {
     console.log('📤 Creating user with data:', userData);
 
     try {
-      const response = await axios.post('http://localhost:3000/api/v1/user', userData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-
+      const response = await apiClient.user.create(userData);
       console.log('✅ User created successfully:', response.data);
     } catch (error) {
       console.error('❌ Error creating user:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('Response data:', error.response?.data);
-        console.error('Response status:', error.response?.status);
-      }
     }
   };
 
@@ -155,20 +142,13 @@ export default function Welcome() {
     console.log(`📤 Creating ${orgType} with data:`, orgData);
 
     try {
-      const response = await axios.post(`http://localhost:3000/api/v1/org/${orgType}`, orgData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
+      const response = selectedRole === 'TEACHER'
+        ? await apiClient.organization.createSchool(orgData)
+        : await apiClient.organization.createNGO(orgData);
 
       console.log(`✅ ${orgType} created successfully:`, response.data);
     } catch (error) {
       console.error(`❌ Error creating ${orgType}:`, error);
-      if (axios.isAxiosError(error)) {
-        console.error('Response data:', error.response?.data);
-        console.error('Response status:', error.response?.status);
-      }
     }
   };
 
@@ -187,20 +167,13 @@ export default function Welcome() {
     console.log('📤 Joining organization with data:', joinRequestData);
 
     try {
-      const response = await axios.post(`http://localhost:3000/api/v1/org/join/${orgType}`, joinRequestData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
+      const response = orgType === 'School'
+        ? await apiClient.organization.joinSchool(joinRequestData)
+        : await apiClient.organization.joinNGO(joinRequestData);
 
       console.log('✅ Successfully joined organization:', response.data);
     } catch (error) {
       console.error('❌ Error joining organization:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('Response data:', error.response?.data);
-        console.error('Response status:', error.response?.status);
-      }
     }
   };
 
@@ -227,7 +200,9 @@ export default function Welcome() {
     if (selectedAction === 'create' || selectedAction === 'join') {
       setStep('details');
     } else {
-      setStep('complete');
+      // For individual users, go directly to avatar step and show creator
+      setStep('avatar');
+      setShowAvatarCreator(true);
     }
   };
 
@@ -240,34 +215,30 @@ export default function Welcome() {
       await joinOrganization();
     }
 
-    setStep('complete');
+    // After completing organization setup, go to avatar step and show creator
+    setStep('avatar');
+    setShowAvatarCreator(true);
     setLoading(false);
   };
 
-  // Handle continue to dashboard - NEW FUNCTION
-  const handleContinueToDashboard = async () => {
-    // console.log('💾 Storing role in sessionStorage:', selectedRole);
-    // console.log('🧭 Navigating to dashboard');
+  // Handle avatar creation - automatically navigate to game after creation
+  const handleAvatarCreated = async (avatarUrl: string) => {
+    console.log('Avatar created:', avatarUrl);
+    setAvatarUrl(avatarUrl);
+    setShowAvatarCreator(false);
 
-    // // Store role in sessionStorage
-    // sessionStorage.setItem('userRole', selectedRole);
-
-    // // Store additional user info in sessionStorage if needed
-    // sessionStorage.setItem('userName', user?.user_metadata.full_name || user?.email || '');
-    // sessionStorage.setItem('userEmail', user?.email || '');
-    // sessionStorage.setItem('userId', user?.id || '');
-
-    const userdata = await axios.get(`http://localhost:3000/api/v1/user/${user?.id}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      }
-    });
-    console.log("Fetched user data before dashboard navigation:", userdata.data);
+    // Automatically navigate to game after avatar creation
+    const userdata = await apiClient.user.getById(user?.id || '');
+    console.log("Fetched user data before game navigation:", userdata.data);
     localStorage.setItem('userData', JSON.stringify(userdata.data));
-    // Navigate to dashboard
-    navigate('/dashboard');
+    navigate('/game');
   };
+
+  const handleCloseAvatarCreator = () => {
+    setShowAvatarCreator(false);
+  };
+
+
 
   // Go back function
   const goBack = () => {
@@ -277,8 +248,14 @@ export default function Welcome() {
       setStep('role');
     } else if (step === 'details') {
       setStep('action');
-    } else if (step === 'complete') {
-      setStep('details');
+    } else if (step === 'avatar') {
+      // Close avatar creator if open and go back to previous step
+      setShowAvatarCreator(false);
+      if (selectedAction === 'individual') {
+        setStep('action');
+      } else {
+        setStep('details');
+      }
     }
   };
 
@@ -607,31 +584,40 @@ export default function Welcome() {
             </div>
           )}
 
-          {/* Complete Step */}
-          {step === 'complete' && (
+          {/* Avatar Creation Step */}
+          {step === 'avatar' && (
             <div className="text-center space-y-6">
-              <div className="text-green-500 text-6xl mb-6">✓</div>
               <div className="space-y-2">
-                <h2 className="text-2xl font-semibold">Setup Complete!</h2>
+                <h2 className="text-2xl font-semibold text-zinc-200">Create Your Avatar</h2>
                 <p className="text-zinc-400">
-                  {selectedAction === 'create'
-                    ? `Your ${selectedRole === 'TEACHER' ? 'school' : 'NGO'} has been created successfully.`
-                    : selectedAction === 'join'
-                      ? `Successfully joined organization!`
-                      : 'You can now continue as an individual student.'
-                  }
+                  Customize your 3D avatar for an immersive experience in the virtual world.
                 </p>
               </div>
-              <button
-                onClick={handleContinueToDashboard}
-                className="rounded-md bg-gradient-to-br from-blue-400 to-blue-700 px-4 py-2 text-lg text-zinc-50 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-zinc-950 transition-all hover:scale-[1.02] hover:ring-transparent active:scale-[0.98] active:ring-blue-500/70 w-full"
-              >
-                Continue to Dashboard
-              </button>
+
+              <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
+                <div className="flex items-center justify-center space-x-2 text-zinc-300">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-zinc-600 border-t-zinc-300"></div>
+                  <span>Opening Avatar Creator...</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-zinc-500">
+                Create your personalized avatar to continue to the game.
+              </p>
             </div>
           )}
+
+
         </div>
       </div>
+
+      {/* Avatar Creator Modal */}
+      {showAvatarCreator && (
+        <AvatarCreator
+          onAvatarCreated={handleAvatarCreated}
+          onClose={handleCloseAvatarCreator}
+        />
+      )}
     </div>
   );
 }

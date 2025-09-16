@@ -24,6 +24,9 @@ interface UserStore {
   // Backend user data
   userData: UserData | null;
 
+  // Avatar URL for 3D model
+  avatarUrl: string | null;
+
   // Loading states
   loading: boolean;
 
@@ -31,6 +34,7 @@ interface UserStore {
   setUser: (user: User | null) => void;
   setAccessToken: (token: string) => void;
   setUserData: (userData: UserData | null) => void;
+  setAvatarUrl: (avatarUrl: string | null) => void;
   setLoading: (loading: boolean) => void;
 
   // Clear all data (for logout)
@@ -44,12 +48,14 @@ export const useUserStore = create<UserStore>()(
       user: null,
       accessToken: "",
       userData: null,
+      avatarUrl: null,
       loading: false,
 
       // Actions
       setUser: (user) => set({ user }),
       setAccessToken: (token) => set({ accessToken: token }),
       setUserData: (userData) => set({ userData }),
+      setAvatarUrl: (avatarUrl) => set({ avatarUrl }),
       setLoading: (loading) => set({ loading }),
 
       // Clear all data
@@ -58,6 +64,7 @@ export const useUserStore = create<UserStore>()(
           user: null,
           accessToken: "",
           userData: null,
+          avatarUrl: null,
           loading: false,
         }),
     }),
@@ -68,6 +75,7 @@ export const useUserStore = create<UserStore>()(
         user: state.user,
         accessToken: state.accessToken,
         userData: state.userData,
+        avatarUrl: state.avatarUrl,
       }),
     }
   )
