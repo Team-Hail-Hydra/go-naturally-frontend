@@ -6,11 +6,28 @@ const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY || '';
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-interface PlantUploadProps {
-  userLocation?: [number, number] | null;
+interface PlantData {
+  plant: {
+    plant: {
+      id: string;
+      plantName: string;
+      description: string;
+      imageUrl: string;
+      latitude: number;
+      longitude: number;
+      rarity: number;
+      createdById: string;
+    };
+    ecopoints: number;
+  };
 }
 
-function PlantUpload({ userLocation }: PlantUploadProps) {
+interface PlantUploadProps {
+  userLocation?: [number, number] | null;
+  onUploadSuccess?: (data: PlantData) => void;
+}
+
+function PlantUpload({ userLocation, onUploadSuccess }: PlantUploadProps) {
   const [isIdentifying, setIsIdentifying] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -88,6 +105,11 @@ function PlantUpload({ userLocation }: PlantUploadProps) {
       );
 
       console.log('Rarity check result:', rarityResponse.data);
+      
+      // Call the success callback if provided
+      if (onUploadSuccess && rarityResponse.data) {
+        onUploadSuccess(rarityResponse.data);
+      }
 
     } catch (error) {
       console.error('Error in plant processing:', error);
