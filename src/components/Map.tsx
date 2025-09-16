@@ -6,8 +6,6 @@ import AvatarCreator from "./AvatarCreator";
 import { AvatarLayer } from "./AvatarLayer";
 import { MarkerManager } from "../utils/MarkerManager";
 import { LightPresetManager } from "../utils/LightPresetManager";
-import EventsDropdown from './EventsDropdown';
-import PlantUpload from './PlantUpload';
 import { useUserStore } from '../store/userStore';
 
 interface MapProps {
@@ -30,7 +28,6 @@ function Map({ onUserLocationChange }: MapProps) {
   const markerManagerRef = useRef<MarkerManager | null>(null);
   const lightPresetManagerRef = useRef<LightPresetManager | null>(null);
   const [mapBearing, setMapBearing] = useState(0);
-  const [isEventsDropdownOpen, setIsEventsDropdownOpen] = useState(false);
 
 
   useEffect(() => {
@@ -166,7 +163,7 @@ function Map({ onUserLocationChange }: MapProps) {
       markerManagerRef.current = null;
       lightPresetManagerRef.current = null;
     };
-  }, []);
+  }, [onUserLocationChange]);
 
   // Add avatar layer when both avatar URL and user location are available
   useEffect(() => {
@@ -236,140 +233,9 @@ function Map({ onUserLocationChange }: MapProps) {
         </div>
       )}
 
-      {/* Avatar creator button and basic upload options */}
-      {!avatarUrl && userLocation && (
-        <div className="absolute top-4 left-4 z-10 space-y-2">
-          <button
-            onClick={() => setShowAvatarCreator(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition-colors font-medium w-full"
-          >
-            Create Avatar
-          </button>
-
-          <PlantUpload userLocation={userLocation} />
-
-          {/* Three dots menu button */}
-          <div className="relative">
-            <button
-              onClick={() => setIsEventsDropdownOpen(!isEventsDropdownOpen)}
-              className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-lg shadow-lg transition-colors"
-              title="Events Menu"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-              </svg>
-            </button>
-
-            <EventsDropdown
-              isOpen={isEventsDropdownOpen}
-              onClose={() => setIsEventsDropdownOpen(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Avatar status and controls */}
-      {avatarUrl && userLocation && (
-        <div className="absolute top-4 left-4 z-10 space-y-2">
-          <div className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg font-medium">
-            Avatar Active
-          </div>
-          <button
-            onClick={() => setShowAvatarCreator(true)}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-colors text-sm"
-          >
-            Change Avatar
-          </button>
-
-          {/* Animation Controls - ReadyPlayerMe Library */}
-          <div className="bg-black/20 backdrop-blur-md border border-white/30 rounded-lg shadow-lg p-3 space-y-2">
-            <div className="text-white text-xs font-medium mb-2">Animations</div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => avatarLayerRef.current?.playAnimation('idle')}
-                className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded text-xs transition-colors"
-              >
-                Idle
-              </button>
-              <button
-                onClick={() => avatarLayerRef.current?.playAnimation('walking')}
-                className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded text-xs transition-colors"
-              >
-                Walking
-              </button>
-            </div>
-            <div className="text-white/60 text-xs mt-2 text-center">
-              ReadyPlayerMe Animations
-            </div>
-          </div>
-
-          {/* Light Preset Controls */}
-          <div className="bg-black/20 backdrop-blur-md border border-white/30 rounded-lg shadow-lg p-3 space-y-2">
-            <div className="text-white text-xs font-medium mb-2">Lighting</div>
-            <div className="grid grid-cols-2 gap-1 text-xs">
-              <button
-                onClick={() => lightPresetManagerRef.current?.applyPreset('night')}
-                className="bg-indigo-600/70 hover:bg-indigo-600 text-white px-2 py-1 rounded transition-colors"
-              >
-                Night
-              </button>
-              <button
-                onClick={() => lightPresetManagerRef.current?.applyPreset('dawn')}
-                className="bg-pink-500/70 hover:bg-pink-500 text-white px-2 py-1 rounded transition-colors"
-              >
-                Dawn
-              </button>
-              <button
-                onClick={() => lightPresetManagerRef.current?.applyPreset('day')}
-                className="bg-yellow-400/70 hover:bg-yellow-400 text-white px-2 py-1 rounded transition-colors"
-              >
-                Day
-              </button>
-              <button
-                onClick={() => lightPresetManagerRef.current?.applyPreset('dusk')}
-                className="bg-orange-500/70 hover:bg-orange-500 text-white px-2 py-1 rounded transition-colors"
-              >
-                Dusk
-              </button>
-            </div>
-            <button
-              onClick={() => lightPresetManagerRef.current?.applyCurrentTimePreset()}
-              className="w-full bg-green-600/70 hover:bg-green-600 text-white px-2 py-1 rounded text-xs transition-colors"
-            >
-              Auto (Current Time)
-            </button>
-            <div className="text-white/60 text-xs text-center">
-              Mapbox Lighting
-            </div>
-          </div>
-
-          <div className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-xs">
-            <div>Q/E: Rotate View</div>
-          </div>
-
-          <PlantUpload userLocation={userLocation} />
 
 
-          {/* Three dots menu button */}
-          <div className="relative">
-            <button
-              onClick={() => setIsEventsDropdownOpen(!isEventsDropdownOpen)}
-              className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-lg shadow-lg transition-colors"
-              title="Events Menu"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-              </svg>
-            </button>
 
-            {/* Events Dropdown */}
-            <EventsDropdown
-              isOpen={isEventsDropdownOpen}
-              onClose={() => setIsEventsDropdownOpen(false)}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Map Controls - Top Right */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">

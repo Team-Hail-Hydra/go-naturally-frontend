@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { apiClient } from "../lib/apiClient";
+import { Camera } from 'lucide-react';
 
 interface AnimalData {
   animal: {
@@ -90,7 +91,7 @@ function AnimalUpload({ userLocation, onUploadSuccess }: AnimalUploadProps) {
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -100,25 +101,31 @@ function AnimalUpload({ userLocation, onUploadSuccess }: AnimalUploadProps) {
         className="hidden"
       />
 
-      <button
+      <div
         onClick={handleUploadClick}
-        disabled={isUploading}
-        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg shadow-lg transition-colors text-sm flex items-center justify-center gap-2"
+        className="relative group cursor-pointer"
       >
-        {isUploading ? (
-          <>
-            <div className="w-4 h-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-            Uploading...
-          </>
-        ) : (
-          <>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            Upload Animal Photo
-          </>
+        <div className="w-full h-48 border-2 border-dashed border-white/30 rounded-xl bg-black/20 backdrop-blur-sm hover:bg-black/30 hover:border-white/50 transition-all duration-300 flex flex-col items-center justify-center gap-4">
+          <div className="w-16 h-16 bg-blue-500/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-blue-400/30">
+            <Camera className="h-8 w-8 text-blue-400" />
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className="text-white font-medium text-lg">Upload Animal Photo</h3>
+            <p className="text-white/60 text-sm">Click to select an image from your device</p>
+            <p className="text-white/40 text-xs">Supports JPG, PNG up to 10MB</p>
+          </div>
+        </div>
+
+        {isUploading && (
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-xl flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <div className="w-12 h-12 animate-spin rounded-full border-4 border-white/20 border-t-blue-400 mx-auto" />
+              <div className="text-white font-medium">Uploading Animal Photo...</div>
+              <div className="text-white/60 text-sm">Processing your wildlife capture</div>
+            </div>
+          </div>
         )}
-      </button>
+      </div>
     </div>
   );
 }

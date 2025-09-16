@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { apiClient } from "../lib/apiClient";
+import { ImagePlus, Upload } from 'lucide-react';
 
 interface LitterUploadProps {
   userLocation?: [number, number] | null;
@@ -146,50 +147,50 @@ function LitterUpload({ userLocation, onUploadSuccess }: LitterUploadProps) {
         className="hidden"
       />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         {/* Before Image */}
-        <div className="space-y-2">
-          <h4 className="font-medium text-sm text-center">Before Photo</h4>
+        <div className="space-y-3">
+          <h4 className="font-medium text-sm text-center text-white">Before Photo</h4>
           <div
             onClick={handleBeforeClick}
-            className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-red-400 transition-colors bg-gray-50 hover:bg-red-50"
+            className="group relative w-full h-40 border-2 border-dashed border-white/30 rounded-xl bg-black/20 backdrop-blur-sm hover:bg-black/30 hover:border-red-400/60 transition-all duration-300 flex items-center justify-center cursor-pointer"
           >
             {beforePreview ? (
               <img
                 src={beforePreview}
                 alt="Before"
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-xl"
               />
             ) : (
-              <div className="text-center text-gray-500">
-                <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                <div className="text-xs">Add Before</div>
+              <div className="text-center space-y-2">
+                <div className="w-12 h-12 bg-red-500/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto border border-red-400/30">
+                  <ImagePlus className="w-6 h-6 text-red-400" />
+                </div>
+                <div className="text-white/80 text-xs">Add Before Photo</div>
               </div>
             )}
           </div>
         </div>
 
         {/* After Image */}
-        <div className="space-y-2">
-          <h4 className="font-medium text-sm text-center">After Photo</h4>
+        <div className="space-y-3">
+          <h4 className="font-medium text-sm text-center text-white">After Photo</h4>
           <div
             onClick={handleAfterClick}
-            className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-green-400 transition-colors bg-gray-50 hover:bg-green-50"
+            className="group relative w-full h-40 border-2 border-dashed border-white/30 rounded-xl bg-black/20 backdrop-blur-sm hover:bg-black/30 hover:border-green-400/60 transition-all duration-300 flex items-center justify-center cursor-pointer"
           >
             {afterPreview ? (
               <img
                 src={afterPreview}
                 alt="After"
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-xl"
               />
             ) : (
-              <div className="text-center text-gray-500">
-                <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                <div className="text-xs">Add After</div>
+              <div className="text-center space-y-2">
+                <div className="w-12 h-12 bg-green-500/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto border border-green-400/30">
+                  <ImagePlus className="w-6 h-6 text-green-400" />
+                </div>
+                <div className="text-white/80 text-xs">Add After Photo</div>
               </div>
             )}
           </div>
@@ -200,26 +201,26 @@ function LitterUpload({ userLocation, onUploadSuccess }: LitterUploadProps) {
       <button
         onClick={handleLitterUpload}
         disabled={isUploading || !beforeImage || !afterImage}
-        className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-4 py-3 rounded-lg shadow-lg transition-colors text-sm flex items-center justify-center gap-2"
+        className="relative w-full bg-gradient-to-r from-red-500/80 to-orange-500/80 hover:from-red-500/90 hover:to-orange-500/90 disabled:from-gray-500/50 disabled:to-gray-600/50 backdrop-blur-sm border border-white/20 text-white px-6 py-4 rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 disabled:hover:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3"
       >
         {isUploading ? (
           <>
-            <div className="w-4 h-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-            Submitting Report...
+            <div className="w-5 h-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            <span>Submitting Report...</span>
           </>
         ) : (
           <>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Submit Litter Report
+            <Upload className="w-5 h-5" />
+            <span>Submit Litter Report</span>
           </>
         )}
       </button>
 
       {/* Instructions */}
-      <div className="text-xs text-gray-600 text-center">
-        <p>Take a photo of litter before cleaning, then another after cleaning to report environmental improvement.</p>
+      <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+        <p className="text-xs text-white/60 text-center leading-relaxed">
+          Take a photo of litter before cleaning, then another after cleaning to report environmental improvement.
+        </p>
       </div>
     </div>
   );
