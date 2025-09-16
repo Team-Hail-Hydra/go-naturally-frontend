@@ -9,7 +9,11 @@ import { LightPresetManager } from "../utils/LightPresetManager";
 import EventsDropdown from './EventsDropdown';
 import PlantUpload from './PlantUpload'; // Import the new component
 
-function Map() {
+interface MapProps {
+  onUserLocationChange?: (location: [number, number] | null) => void;
+}
+
+function Map({ onUserLocationChange }: MapProps) {
   const isDevelopment = import.meta.env.VITE_MODE === 'development';
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -100,7 +104,9 @@ function Map() {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             const { latitude, longitude } = pos.coords;
-            setUserLocation([longitude, latitude]);
+            const newLocation: [number, number] = [longitude, latitude];
+            setUserLocation(newLocation);
+            onUserLocationChange?.(newLocation);
 
             const performFly = () => {
               // Use flyTo for smoother animation, do not call map.stop()
