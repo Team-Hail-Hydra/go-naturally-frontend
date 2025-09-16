@@ -101,7 +101,7 @@ const VideoControlBar = ({ videoRef, isVisible }: { videoRef: React.RefObject<HT
             initial={{ y: 100, x: "-50%", opacity: 0 }}
             animate={{ y: 0, x: "-50%", opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100vw-2rem)] min-w-[320px] max-w-4xl bg-black/80 backdrop-blur-md border border-white/20 rounded-full px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 md:gap-4 "
+            className="fixed overflow-hidden bottom-10 left-1/2 transform -translate-x-1/2 z-40 w-[calc(100vw-2rem)] min-w-[320px] max-w-4xl bg-black/80 backdrop-blur-md border border-white/20 rounded-full px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 md:gap-4 "
         >
             {/* Animated Progress Background */}
             <motion.div

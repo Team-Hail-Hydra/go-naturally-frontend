@@ -13,7 +13,7 @@ export const teamMembers: TeamMember[] = [
   {
     id: 1,
     name: "Kunal Shah",
-    role: "Frontend Developer",
+    role: "Frontend Engineer",
     description: "",
     image: "/kunal.jpg",
     github: "https://github.com/kunalshah017",
@@ -39,35 +39,29 @@ export const teamMembers: TeamMember[] = [
   },
   {
     id: 4,
-    name: "Emma Rodriguez",
+    name: "Vinayak Patnaik",
     role: "Backend Engineer",
-    description:
-      "Specializes in scalable systems and real-time data processing for environmental monitoring.",
-    image:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face",
-    github: "https://github.com/emmarodriguez",
-    linkedin: "https://linkedin.com/in/emmarodriguez",
+    description: "",
+    image: "/vinayak.jpg",
+    github: "https://github.com/Rageemon",
+    linkedin: "https://www.linkedin.com/in/vinayak-patnaik-009503344/",
   },
   {
     id: 5,
-    name: "David Kim",
-    role: "Product Manager",
-    description:
-      "Bridging technology and environmental impact through strategic product development.",
-    image:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=face",
-    github: "https://github.com/davidkim",
-    linkedin: "https://linkedin.com/in/davidkim",
+    name: "Selva Perumal",
+    role: "AI/ML Engineer",
+    description: "",
+    image: "/selva.jpg",
+    github: "https://github.com/manuqlly",
+    linkedin: "https://www.linkedin.com/in/selva-perumal-725a77216",
   },
   {
     id: 6,
-    name: "Lisa Wang",
-    role: "Data Scientist",
-    description:
-      "Analyzing environmental data to provide meaningful insights and predictions.",
-    image:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=face",
-    github: "https://github.com/lisawang",
-    linkedin: "https://linkedin.com/in/lisawang",
+    name: "Mohin Shaikh",
+    role: "Backend Engineer",
+    description: "",
+    image: "/mohin.jpg",
+    github: "https://github.com/MohinShaikh5689",
+    linkedin: "https://www.linkedin.com/in/mohin-shaikh-26a75b285/",
   },
 ];

@@ -28,7 +28,7 @@ const roleConfig = {
   }
 };
 
-export default function RegisterForm() {
+export default function AuthPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
