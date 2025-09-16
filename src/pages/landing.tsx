@@ -529,10 +529,10 @@ const TeamSection = () => {
 
     return (
         <section id="team-section" ref={targetRef} className="relative h-[200vh] md:h-[300vh] bg-black/30 backdrop-blur-[4px] z-10">
-            <div className="sticky top-16 flex h-screen items-center overflow-hidden">
-                <div className="w-full absolute top-16 md:top-20 left-1/2 transform -translate-x-1/2 z-20 px-4">
+            <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+                <div className="w-full absolute top-4 sm:top-8 md:top-12 lg:top-16 left-1/2 transform -translate-x-1/2 z-20 px-4">
                     <motion.h2
-                        className="text-4xl md:text-6xl font-bold text-white text-center mb-2 md:mb-4"
+                        className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-white text-center mb-1 sm:mb-2 md:mb-4"
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -540,7 +540,7 @@ const TeamSection = () => {
                         Meet Our Team
                     </motion.h2>
                     <motion.p
-                        className="text-white/80 text-lg md:text-xl text-center"
+                        className="text-white/80 text-sm sm:text-base md:text-lg lg:text-xl text-center"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
@@ -548,7 +548,7 @@ const TeamSection = () => {
                         Passionate individuals working to make a difference
                     </motion.p>
                 </div>
-                <motion.div style={{ x }} className="flex gap-4 md:gap-6 pl-[5%]">
+                <motion.div style={{ x }} className="flex gap-4 md:gap-6 pl-[5%] sm:mt-20 md:mt-28 lg:mt-48">
                     {teamMembers.map((member) => {
                         return <TeamCard member={member} key={member.id} />;
                     })}
