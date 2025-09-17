@@ -132,7 +132,7 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
 
       {/* Main floating button */}
       <motion.div
-        className="fixed bottom-8 left-[50%] translate-x-[-50%] z-50"
+        className="fixed bottom-8 left-[50%] translate-x-[-50%] z-40"
       >
         <Button
           onClick={toggleMenu}

@@ -27,6 +27,9 @@ interface UserStore {
   // Avatar URL for 3D model
   avatarUrl: string | null;
 
+  // Eco points (dummy for now)
+  ecoPoints: number;
+
   // Loading states
   loading: boolean;
 
@@ -35,6 +38,8 @@ interface UserStore {
   setAccessToken: (token: string) => void;
   setUserData: (userData: UserData | null) => void;
   setAvatarUrl: (avatarUrl: string | null) => void;
+  setEcoPoints: (points: number) => void;
+  addEcoPoints: (points: number) => void;
   setLoading: (loading: boolean) => void;
 
   // Clear all data (for logout)
@@ -49,6 +54,7 @@ export const useUserStore = create<UserStore>()(
       accessToken: "",
       userData: null,
       avatarUrl: null,
+      ecoPoints: 200, // Dummy starting points
       loading: false,
 
       // Actions
@@ -56,6 +62,9 @@ export const useUserStore = create<UserStore>()(
       setAccessToken: (token) => set({ accessToken: token }),
       setUserData: (userData) => set({ userData }),
       setAvatarUrl: (avatarUrl) => set({ avatarUrl }),
+      setEcoPoints: (points) => set({ ecoPoints: points }),
+      addEcoPoints: (points) =>
+        set((state) => ({ ecoPoints: state.ecoPoints + points })),
       setLoading: (loading) => set({ loading }),
 
       // Clear all data
@@ -65,6 +74,7 @@ export const useUserStore = create<UserStore>()(
           accessToken: "",
           userData: null,
           avatarUrl: null,
+          ecoPoints: 200, // Reset to dummy starting points
           loading: false,
         }),
     }),
@@ -76,6 +86,7 @@ export const useUserStore = create<UserStore>()(
         accessToken: state.accessToken,
         userData: state.userData,
         avatarUrl: state.avatarUrl,
+        ecoPoints: state.ecoPoints,
       }),
     }
   )
