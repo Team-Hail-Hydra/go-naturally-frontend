@@ -151,6 +151,11 @@ class ApiClient {
       this.postFormData("/litter/upload", formData),
   };
 
+  // Leaderboard-related API calls
+  leaderboard = {
+    getAll: () => this.get("/leaderboard"),
+  };
+
   // Event-related API calls
   events = {
     getSchoolEvents: (params?: string) =>
