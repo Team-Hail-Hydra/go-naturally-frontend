@@ -1,20 +1,58 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { authService } from "../utils/oauth";
 import { useToast } from "@/hooks/use-toast";
 import { PWAInstallModal } from "@/components/PWAInstallModal";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
+import { useUserStore } from "@/store/userStore";
 import GoogleLogo from "../assets/google.svg";
 import GoNaturallyLogo from "../assets/Go_Naturally_SingleLine.svg";
 
 export default function AuthPage() {
   const [oauthLoading, setOauthLoading] = useState(false);
   const [showPWAPrompt, setShowPWAPrompt] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // User store for authentication state
+  const { user, userData, accessToken } = useUserStore();
 
   // PWA Install functionality
   const { canInstall, isInstalled, isPWA } = usePWAInstall();
+
+  // Check if user is already authenticated and redirect to game
+  useEffect(() => {
+    // Small delay to ensure store has been rehydrated from localStorage
+    const checkAuthTimer = setTimeout(() => {
+      // Check if user has full authentication data
+      const isFullyAuthenticated = user && userData && accessToken;
+
+      if (isFullyAuthenticated) {
+        console.log("User is already authenticated, redirecting to game...");
+        toast({
+          title: "Welcome back!",
+          description: "Redirecting you to the game..."
+        });
+        navigate('/game');
+        return;
+      }
+
+      console.log("User authentication status:", {
+        hasUser: !!user,
+        hasUserData: !!userData,
+        hasAccessToken: !!accessToken,
+        userEmail: user?.email,
+        userDataRole: userData?.role
+      });
+
+      // Done checking authentication
+      setIsCheckingAuth(false);
+    }, 100); // Small delay to ensure store rehydration
+
+    return () => clearTimeout(checkAuthTimer);
+  }, [user, userData, accessToken, navigate, toast]);
 
   // Auto-show PWA install prompt when page loads
   useEffect(() => {
@@ -76,6 +114,18 @@ export default function AuthPage() {
       setOauthLoading(false);
     }
   };
+
+  // Show loading screen while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="bg-zinc-950 min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-8 h-8 border-4 border-zinc-700 border-t-zinc-400 rounded-full animate-spin mx-auto"></div>
+          <p className="text-zinc-400 text-sm">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-zinc-950 py-20 text-zinc-200 selection:bg-zinc-600 min-h-screen relative overflow-hidden">

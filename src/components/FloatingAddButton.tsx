@@ -132,9 +132,7 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
 
       {/* Main floating button */}
       <motion.div
-        className="fixed bottom-8 left-[40%] transform -translate-x-1/2 z-50"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        className="fixed bottom-8 left-[50%] translate-x-[-50%] z-50"
       >
         <Button
           onClick={toggleMenu}
@@ -158,7 +156,7 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed bottom-24 left-[40%] transform -translate-x-1/2 z-40"
+            className="fixed bottom-24 left-[50%] -translate-x-1/2 z-40 "
           >
             {sections.map((section, index) => {
               const IconComponent = section.icon;
@@ -167,8 +165,8 @@ const FloatingAddButton = ({ userLocation }: FloatingAddButtonProps) => {
               const baseAngle = -90; // Start from straight up
               const angleSpread = 120; // Total spread of 120 degrees
               const angle = baseAngle + (index - 1) * (angleSpread / 2); // Center the middle button
-              const radius = 80;
-              const x = Math.cos((angle * Math.PI) / 180) * radius;
+              const radius = 90;
+              const x = Math.cos((angle * Math.PI) / 180) * radius - 25;
               const y = Math.sin((angle * Math.PI) / 180) * radius;
 
               return (

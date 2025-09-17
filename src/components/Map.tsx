@@ -13,7 +13,7 @@ interface MapProps {
 }
 
 function Map({ onUserLocationChange }: MapProps) {
-  const isDevelopment = import.meta.env.VITE_MODE === 'development';
+  // const isDevelopment = import.meta.env.VITE_MODE === 'development';
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -239,12 +239,6 @@ function Map({ onUserLocationChange }: MapProps) {
 
       {/* Map Controls - Top Right */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-        {/* Location status */}
-        {!userLocation && isDevelopment && (
-          <div className="bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm">
-            Getting location...
-          </div>
-        )}
 
         {/* Compass Button */}
         <button
