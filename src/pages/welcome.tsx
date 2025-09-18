@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react"
 import { apiClient, supabase } from "../lib/apiClient"
 import { useNavigate } from 'react-router-dom'
 import { useUserStore, type UserRole } from '../store/userStore'
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { GraduationCap, Users, Heart, ArrowLeft, ChevronRight } from "lucide-react"
+import { GraduationCap, Users, Heart, ArrowLeft, ChevronRight, Copy, Share2, Check } from "lucide-react"
 import GoNaturallyLogo from "../assets/Go_Naturally_SingleLine.svg"
 import AvatarCreator from "../components/AvatarCreator"
 
@@ -44,10 +45,12 @@ export default function Welcome() {
   const { user, accessToken, setUser, setAccessToken, loading, setLoading, setAvatarUrl } = useUserStore();
 
   // Local state
-  const [step, setStep] = useState<'role' | 'action' | 'details' | 'avatar'>('role')
+  const [step, setStep] = useState<'role' | 'action' | 'details' | 'joincode' | 'avatar'>('role')
   const [showAvatarCreator, setShowAvatarCreator] = useState(false)
   const [selectedRole, setSelectedRole] = useState<UserRole>('STUDENT')
   const [selectedAction, setSelectedAction] = useState<ActionType>('join')
+  const [joinCode, setJoinCode] = useState<string>('')
+  const [joinCodeCopied, setJoinCodeCopied] = useState(false)
   const [formData, setFormData] = useState<CreateOrganizationData>({
     name: '',
     email: '',
@@ -142,14 +145,21 @@ export default function Welcome() {
     console.log(`📤 Creating ${orgType} with data:`, orgData);
 
     try {
-      const response = selectedRole === 'TEACHER'
+      const response: any = selectedRole === 'TEACHER'
         ? await apiClient.organization.createSchool(orgData)
         : await apiClient.organization.createNGO(orgData);
 
       console.log(`✅ ${orgType} created successfully:`, response.data);
+
+      // Extract joinCode from response
+      if (response.data && response.data.org.joinCode) {
+        setJoinCode(response.data.org.joinCode);
+        return true; // Indicate success
+      }
     } catch (error) {
       console.error(`❌ Error creating ${orgType}:`, error);
     }
+    return false; // Indicate failure
   };
 
   // API call to join organization - simplified to only use organization code
@@ -210,14 +220,18 @@ export default function Welcome() {
     setLoading(true);
 
     if (selectedAction === 'create') {
-      await createOrganization();
+      const success = await createOrganization();
+      if (success) {
+        // Show join code step for organization creators
+        setStep('joincode');
+      }
     } else if (selectedAction === 'join') {
       await joinOrganization();
+      // After joining organization, go directly to avatar step
+      setStep('avatar');
+      setShowAvatarCreator(true);
     }
 
-    // After completing organization setup, go to avatar step and show creator
-    setStep('avatar');
-    setShowAvatarCreator(true);
     setLoading(false);
   };
 
@@ -238,6 +252,24 @@ export default function Welcome() {
     setShowAvatarCreator(false);
   };
 
+  // Handle proceeding from join code step
+  const handleJoinCodeContinue = () => {
+    setStep('avatar');
+    setShowAvatarCreator(true);
+  };
+
+  // Copy join code to clipboard
+  const copyJoinCode = async () => {
+    try {
+      await navigator.clipboard.writeText(joinCode);
+      setJoinCodeCopied(true);
+      // Reset the copied state after 2 seconds
+      setTimeout(() => setJoinCodeCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy join code:', err);
+    }
+  };
+
 
 
   // Go back function
@@ -248,11 +280,15 @@ export default function Welcome() {
       setStep('role');
     } else if (step === 'details') {
       setStep('action');
+    } else if (step === 'joincode') {
+      setStep('details');
     } else if (step === 'avatar') {
       // Close avatar creator if open and go back to previous step
       setShowAvatarCreator(false);
       if (selectedAction === 'individual') {
         setStep('action');
+      } else if (selectedAction === 'create') {
+        setStep('joincode');
       } else {
         setStep('details');
       }
@@ -580,6 +616,78 @@ export default function Welcome() {
                 className="rounded-md bg-gradient-to-br from-blue-400 to-blue-700 px-4 py-2 text-lg text-zinc-50 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-zinc-950 transition-all hover:scale-[1.02] hover:ring-transparent active:scale-[0.98] active:ring-blue-500/70 w-full disabled:opacity-50"
               >
                 {loading ? 'Verifying Code...' : 'Join Organization'}
+              </button>
+            </div>
+          )}
+
+          {/* Join Code Display Step */}
+          {step === 'joincode' && (
+            <div>
+              <div className="mb-9 mt-6 space-y-1.5">
+                <h2 className="text-2xl font-semibold text-center">
+                  {selectedRole === 'TEACHER' ? 'School' : 'NGO'} Created Successfully!
+                </h2>
+                <p className="text-zinc-400 text-center">
+                  Share this code with others to join your {selectedRole === 'TEACHER' ? 'school' : 'NGO'}
+                </p>
+              </div>
+
+              <div className="space-y-6 mb-6">
+                {/* Join Code Display */}
+                <div className="bg-zinc-800 rounded-lg p-6 border border-zinc-700">
+                  <div className="text-center space-y-4">
+                    <div className="text-zinc-400 text-sm font-medium uppercase tracking-wider">
+                      {selectedRole === 'TEACHER' ? 'School' : 'NGO'} Join Code
+                    </div>
+                    <div className="text-3xl font-bold text-zinc-200 bg-zinc-900 rounded-lg p-4 border border-zinc-600 font-mono tracking-wider">
+                      {joinCode}
+                    </div>
+                    <p className="text-xs text-zinc-500">
+                      Students and teachers can use this code to join your {selectedRole === 'TEACHER' ? 'school' : 'NGO'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={copyJoinCode}
+                    className="relative z-0 flex items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-4 py-3 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100"
+                  >
+                    {joinCodeCopied ? (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" />
+                        Copy Code
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: `Join my ${selectedRole === 'TEACHER' ? 'School' : 'NGO'}`,
+                          text: `Use this code to join: ${joinCode}`,
+                        });
+                      }
+                    }}
+                    className="relative z-0 flex items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-md border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-950 px-4 py-3 text-zinc-50 transition-all duration-300 before:absolute before:inset-0 before:-z-10 before:translate-y-[200%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-100 before:transition-transform before:duration-500 before:content-[''] hover:scale-105 hover:text-zinc-900 hover:before:translate-y-[0%] active:scale-100"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Share Code
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={handleJoinCodeContinue}
+                className="rounded-md bg-gradient-to-br from-blue-400 to-blue-700 px-4 py-2 text-lg text-zinc-50 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-zinc-950 transition-all hover:scale-[1.02] hover:ring-transparent active:scale-[0.98] active:ring-blue-500/70 w-full"
+              >
+                Continue to Avatar Creation
               </button>
             </div>
           )}
