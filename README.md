@@ -265,7 +265,9 @@ Deploy the `dist/` folder to:
 - 📚 **Docs**: Check our [Wiki](https://github.com/Team-Hail-Hydra/go-naturally-frontend/wiki)
 
 ---
-
+## Demo Video
+[![Youtube Video](https://github.com/user-attachments/assets/83a5c5d2-5a9d-47db-baae-af84da3f0608)](https://www.youtube.com/watch?v=Ibk7X8G6O_I)
+---
 ## 🏆 Why Go Naturally Frontend?
 
 > **🌟 Next-Generation Environmental Engagement Platform**
